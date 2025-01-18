@@ -1,25 +1,20 @@
--- Create users table for service customers
-CREATE TABLE clients (
+CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(100),
     phone VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
-);
-
--- Create admins table
-CREATE TABLE admins (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    full_name VARCHAR(100),
     role ENUM('admin', 'client') DEFAULT 'client',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    dob DATE NULL,
+    address TEXT NULL,
+    gender ENUM('male', 'female', 'other') NULL,
+    security_question VARCHAR(255) NULL,
+    security_answer VARCHAR(255) NULL
 );
+
+
 -- Create services table
 CREATE TABLE services (
     id INT PRIMARY KEY AUTO_INCREMENT,

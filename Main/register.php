@@ -1,6 +1,3 @@
-
-
-
 <?php
 session_start();
 require_once '../db.php';
@@ -8,14 +5,29 @@ require_once '../db.php';
 $errors = [];
 $success_message = "";
 
+// Predefined security questions
+$security_questions = [
+    'What is your mother\'s maiden name?',
+    'What was the name of your first pet?',
+    'What is the name of the street you grew up on?',
+    'What was your childhood nickname?',
+    'In what city were you born?'
+];
+
+$username = $email = $full_name = $phone = $dob = $address = $gender = $security_question = $security_answer = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get and sanitize form inputs
-    $username = trim($conn->real_escape_string($_POST['username']));
-    $email = trim($conn->real_escape_string($_POST['email']));
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
-    $full_name = trim($conn->real_escape_string($_POST['full_name'] ?? ''));
-    $phone = trim($conn->real_escape_string($_POST['phone'] ?? ''));
+    $username = isset($_POST['username']) ? trim($conn->real_escape_string($_POST['username'])) : '';
+    $email = isset($_POST['email']) ? trim($conn->real_escape_string($_POST['email'])) : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
+    $confirm_password = isset($_POST['confirm_password']) ? $_POST['confirm_password'] : '';
+    $full_name = isset($_POST['full_name']) ? trim($conn->real_escape_string($_POST['full_name'])) : '';
+    $phone = isset($_POST['phone']) ? trim($conn->real_escape_string($_POST['phone'])) : '';
+    $dob = isset($_POST['dob']) ? $_POST['dob'] : '';
+    $address = isset($_POST['address']) ? trim($conn->real_escape_string($_POST['address'])) : '';
+    $gender = isset($_POST['gender']) ? $_POST['gender'] : '';
+    $security_question = isset($_POST['security_question']) ? $_POST['security_question'] : '';
+    $security_answer = isset($_POST['security_answer']) ? trim($conn->real_escape_string($_POST['security_answer'])) : '';
 
     // Validation
     if (empty($username)) {
@@ -44,8 +56,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors[] = "Invalid phone number format";
     }
 
+    if (empty($dob)) {
+        $errors[] = "Date of birth is required";
+    }
+
+    if (empty($address)) {
+        $errors[] = "Address is required";
+    }
+
+    if (empty($gender) || !in_array($gender, ['male', 'female', 'other'])) {
+        $errors[] = "Please select a valid gender";
+    }
+
+    if (empty($security_question)) {
+        $errors[] = "Security question is required";
+    }
+
+    if (empty($security_answer)) {
+        $errors[] = "Security answer is required";
+    }
+
     // Check if username already exists
-    $stmt = $conn->prepare("SELECT id FROM clients WHERE username = ?");
+    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     if ($stmt->get_result()->num_rows > 0) {
@@ -54,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->close();
 
     // Check if email already exists
-    $stmt = $conn->prepare("SELECT id FROM clients WHERE email = ?");
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     if ($stmt->get_result()->num_rows > 0) {
@@ -64,10 +96,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // If no errors, insert into database
     if (empty($errors)) {
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        
-        $stmt = $conn->prepare("INSERT INTO clients (username, email, password, full_name, phone) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $username, $email, $hashed_password, $full_name, $phone);
+        // Insert the form data into the users table
+        $stmt = $conn->prepare("INSERT INTO users (username, email, password, full_name, phone, dob, address, gender, security_question, security_answer) 
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssssssss", $username, $email, $password, $full_name, $phone, $dob, $address, $gender, $security_question, $security_answer);
         
         if ($stmt->execute()) {
             $_SESSION['registration_success'] = "Account created successfully! Please login.";
@@ -87,93 +119,175 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Account</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.2/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9fafb;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-header {
+            font-size: 24px;
+            font-weight: 600;
+            color: #4c51bf;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .error-list {
+            background-color: #fff3f3;
+            color: #e53e3e;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #e53e3e;
+        }
+
+        .error-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .error-list ul li {
+            margin-bottom: 5px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .form-submit {
+            width: 100%;
+            padding: 12px;
+            background-color: #4c51bf;
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .form-submit:hover {
+            background-color: #434190;
+        }
+
+        .form-select {
+            cursor: pointer;
+        }
+    </style>
 </head>
-<body class="bg-gray-50">
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
-            <div>
-                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Create Account
-                </h2>
+<body class="bg-gray-100">
+    <div class="form-container">
+        <div class="form-header">Create Your Account</div>
+
+        <?php if (!empty($errors)): ?>
+            <div class="error-list">
+                <ul>
+                    <?php foreach ($errors as $error): ?>
+                        <li><?php echo htmlspecialchars($error); ?></li>
+                    <?php endforeach; ?>
+                </ul>
             </div>
+        <?php endif; ?>
 
-            <?php if (!empty($errors)): ?>
-                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <ul class="text-sm text-red-700">
-                                <?php foreach ($errors as $error): ?>
-                                    <li><?php echo htmlspecialchars($error); ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            <?php endif; ?>
-
-            <form class="mt-8 space-y-6" method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-                <div class="rounded-md shadow-sm space-y-4">
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-                        <input id="username" name="username" type="text" required 
-                               class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                               value="<?php echo htmlspecialchars($username ?? ''); ?>">
-                    </div>
-
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input id="email" name="email" type="email" required 
-                               class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                               value="<?php echo htmlspecialchars($email ?? ''); ?>">
-                    </div>
-
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                        <input id="password" name="password" type="password" required 
-                               class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm">
-                    </div>
-
-                    <div>
-                        <label for="confirm_password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                        <input id="confirm_password" name="confirm_password" type="password" required 
-                               class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm">
-                    </div>
-
-                    <div>
-                        <label for="full_name" class="block text-sm font-medium text-gray-700">Full Name (Optional)</label>
-                        <input id="full_name" name="full_name" type="text" 
-                               class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                               value="<?php echo htmlspecialchars($full_name ?? ''); ?>">
-                    </div>
-
-                    <div>
-                        <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number (Optional)</label>
-                        <input id="phone" name="phone" type="tel" 
-                               class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                               value="<?php echo htmlspecialchars($phone ?? ''); ?>">
-                    </div>
+        <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+            <div class="space-y-6">
+                <div>
+                    <label for="username" class="text-sm font-medium text-gray-700">Username</label>
+                    <input id="username" name="username" type="text" required 
+                           class="form-input" 
+                           value="<?php echo htmlspecialchars($username ?? ''); ?>">
                 </div>
 
                 <div>
-                    <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Create Account
-                    </button>
+                    <label for="email" class="text-sm font-medium text-gray-700">Email</label>
+                    <input id="email" name="email" type="email" required 
+                           class="form-input" 
+                           value="<?php echo htmlspecialchars($email ?? ''); ?>">
                 </div>
-                
-                <div class="text-center">
-                    <a href="login.php" class="text-sm text-indigo-600 hover:text-indigo-500">
-                        Already have an account? Sign in
-                    </a>
+
+                <div>
+                    <label for="password" class="text-sm font-medium text-gray-700">Password</label>
+                    <input id="password" name="password" type="password" required 
+                           class="form-input">
                 </div>
-            </form>
-        </div>
+
+                <div>
+                    <label for="confirm_password" class="text-sm font-medium text-gray-700">Confirm Password</label>
+                    <input id="confirm_password" name="confirm_password" type="password" required 
+                           class="form-input">
+                </div>
+
+                <div>
+                    <label for="full_name" class="text-sm font-medium text-gray-700">Full Name</label>
+                    <input id="full_name" name="full_name" type="text" 
+                           class="form-input" 
+                           value="<?php echo htmlspecialchars($full_name ?? ''); ?>">
+                </div>
+
+                <div>
+                    <label for="phone" class="text-sm font-medium text-gray-700">Phone</label>
+                    <input id="phone" name="phone" type="text" 
+                           class="form-input" 
+                           value="<?php echo htmlspecialchars($phone ?? ''); ?>">
+                </div>
+
+                <div>
+                    <label for="dob" class="text-sm font-medium text-gray-700">Date of Birth</label>
+                    <input id="dob" name="dob" type="date" required 
+                           class="form-input" 
+                           value="<?php echo htmlspecialchars($dob ?? ''); ?>">
+                </div>
+
+                <div>
+                    <label for="address" class="text-sm font-medium text-gray-700">Address</label>
+                    <textarea id="address" name="address" rows="4" 
+                              class="form-textarea"><?php echo htmlspecialchars($address ?? ''); ?></textarea>
+                </div>
+
+                <div>
+                    <label for="gender" class="text-sm font-medium text-gray-700">Gender</label>
+                    <select id="gender" name="gender" required 
+                            class="form-select">
+                        <option value="male" <?php echo ($gender == 'male' ? 'selected' : ''); ?>>Male</option>
+                        <option value="female" <?php echo ($gender == 'female' ? 'selected' : ''); ?>>Female</option>
+                        <option value="other" <?php echo ($gender == 'other' ? 'selected' : ''); ?>>Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="security_question" class="text-sm font-medium text-gray-700">Security Question</label>
+                    <select id="security_question" name="security_question" required 
+                            class="form-select">
+                        <?php foreach ($security_questions as $question): ?>
+                            <option value="<?php echo htmlspecialchars($question); ?>" 
+                                <?php echo ($security_question == $question ? 'selected' : ''); ?>>
+                                <?php echo htmlspecialchars($question); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="security_answer" class="text-sm font-medium text-gray-700">Security Answer</label>
+                    <input id="security_answer" name="security_answer" type="text" required 
+                           class="form-input" 
+                           value="<?php echo htmlspecialchars($security_answer ?? ''); ?>">
+                </div>
+
+                <div>
+                    <button type="submit" class="form-submit">Register</button>
+                </div>
+            </div>
+        </form>
     </div>
 </body>
 </html>
-

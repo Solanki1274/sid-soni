@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Get admin data
-$stmt = $conn->prepare("SELECT username FROM clients WHERE id = ?");
+$stmt = $conn->prepare("SELECT username FROM users WHERE id = ?");
 $stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -57,7 +57,7 @@ $stmt->close();
             <nav class="flex-1 p-4">
                 <ul class="space-y-2">
                     <li>
-                        <a href="admin_dashboard.php" class="sidebar-link active-link flex items-center space-x-3 p-3 rounded-lg transition-all duration-200">
+                        <a href="profile.php" class="sidebar-link active-link flex items-center space-x-3 p-3 rounded-lg transition-all duration-200">
                             <i class="fas fa-tachometer-alt w-6"></i>
                             <span>Dashboard</span>
                         </a>
