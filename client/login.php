@@ -2,6 +2,13 @@
 session_start();
 require_once '../db.php'; // Include your database connection
 
+require_once '../includes/session_manager.php';
+
+// Verify user is logged in and has client role
+checkUserRole('client');
+
+// Get current user data
+$currentUser = getCurrentUser();
 $errors = [];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -25,17 +32,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows === 1) {
             $user = $result->fetch_assoc();
             
-            // Check password (simple match, no hashing as requested)
-            if ($password === $user['password']) { // Ensure strict comparison
+            // Check password (password is stored in plain text in this case, adjust if needed)
+            if ($password == $user['password']) { // Simple password match, no hashing
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role']; // Store role in session to handle redirection
 
                 // Redirect based on role
-                if ($user['role'] === 'admin') {
+                if ($user['role'] == 'admin') {
                     header("Location: ../Main/admin_dashboard.php"); // Admin dashboard
                 } else {
-                    header("Location: ../client/client_dashboard.php"); // Client dashboard
+                    header("Location: ../Client/client_dashboard.php"); // Client dashboard
                 }
                 exit();
             } else {
