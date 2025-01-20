@@ -11,7 +11,7 @@ if (!isset($_SESSION['id'])) {
 
 // Get admin details from the database
 $admin_id = $_SESSION['id'];
-$sql = "SELECT * FROM admins WHERE id = ?";
+$sql = "SELECT * FROM users WHERE id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $admin_id);
 $stmt->execute();

@@ -14,53 +14,88 @@ $user = [];
 $recent_bookings = [];
 $services = [];
 
+// Check for proper authentication
+if (!isset($_SESSION['user_id']) && !isset($_SESSION['username'])) {
+    header("Location: login.php");
+    exit();
+}
+
 // Fetch user details and related data
 try {
-    if (isset($_SESSION['id'])) {
-        $user_id = $_SESSION['id'];
+    // Get user details using either user_id or username
+    $user_identifier = $_SESSION['user_id'] ?? $_SESSION['username'];
+    $user_stmt = null;
+    
+    if (isset($_SESSION['user_id'])) {
+        $user_stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+        $user_stmt->bind_param("i", $_SESSION['user_id']);
+    } else {
+        $user_stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
+        $user_stmt->bind_param("s", $_SESSION['username']);
+    }
 
-        // Get user details
-        $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $user_result = $stmt->get_result();
-        $user = $user_result->fetch_assoc();
-        $stmt->close();
+    $user_stmt->execute();
+    $user_result = $user_stmt->get_result();
+    
+    if ($user_result->num_rows === 0) {
+        throw new Exception("User not found");
+    }
+    
+    $user = $user_result->fetch_assoc();
+    $user_stmt->close();
+    
+    // Store the user ID in session if not already set
+    if (!isset($_SESSION['user_id'])) {
+        $_SESSION['user_id'] = $user['id'];
+    }
 
-        // Get user's recent bookings
-        $booking_sql = "
-            SELECT b.*, s.name AS service_name, s.price, s.duration,
-                   DATE_FORMAT(b.booking_date, '%M %d, %Y') AS formatted_date,
-                   TIME_FORMAT(b.booking_time, '%h:%i %p') AS formatted_time
-            FROM bookings b
-            JOIN services s ON b.service_id = s.id
-            WHERE b.user_id = ?
-            ORDER BY b.booking_date DESC, b.booking_time DESC
-            LIMIT 5";
-        $stmt = $conn->prepare($booking_sql);
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $bookings_result = $stmt->get_result();
-        while ($booking = $bookings_result->fetch_assoc()) {
-            $recent_bookings[] = $booking;
-        }
-        $stmt->close();
+    // Get user's recent bookings
+    $booking_sql = "
+        SELECT b.*, s.name AS service_name, s.price, s.duration,
+               DATE_FORMAT(b.booking_date, '%M %d, %Y') AS formatted_date,
+               TIME_FORMAT(b.booking_time, '%h:%i %p') AS formatted_time
+        FROM bookings b
+        JOIN services s ON b.service_id = s.id
+        WHERE b.user_id = ?
+        ORDER BY b.booking_date DESC, b.booking_time DESC
+        LIMIT 5";
+    $stmt = $conn->prepare($booking_sql);
+    $stmt->bind_param("i", $user['id']);
+    $stmt->execute();
+    $bookings_result = $stmt->get_result();
+    while ($booking = $bookings_result->fetch_assoc()) {
+        $recent_bookings[] = $booking;
+    }
+    $stmt->close();
 
-        // Get available services
-        $services_sql = "SELECT * FROM services ORDER BY name";
-        $services_result = $conn->query($services_sql);
+    // Get available services
+    $services_sql = "SELECT * FROM services WHERE active = 1 ORDER BY name";
+    $services_result = $conn->query($services_sql);
+    if ($services_result) {
         while ($service = $services_result->fetch_assoc()) {
             $services[] = $service;
         }
-    } else {
-        throw new Exception("User session not found.");
     }
 } catch (Exception $e) {
     error_log("Dashboard error: " . $e->getMessage());
-    $error_message = "An error occurred while loading your information.";
+   
+    
+    // If there's a serious error, clear the session and redirect to login
+    if ($e->getMessage() === "User not found") {
+        session_destroy();
+        header("Location: login.php?error=session_expired");
+        exit();
+    }
 }
-?>
 
+// Format user information for display
+$display_name = htmlspecialchars($user['full_name'] ?? $user['username'] ?? 'User');
+$display_email = htmlspecialchars($user['email'] ?? '');
+$display_phone = htmlspecialchars($user['phone'] ?? 'Not provided');
+$display_role = ucfirst(htmlspecialchars($user['role'] ?? 'client'));
+
+// Rest of your HTML remains the same, just update the welcome section to use new variables:
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -174,7 +209,7 @@ try {
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                     <?php if ($booking['status'] === 'pending'): ?>
-                                                        <a href="cancel_booking.php?id=<?php echo $booking['id']; ?>" 
+                                                        <a href="cancel_bookings.php?id=<?php echo $booking['id']; ?>" 
                                                            class="btn btn-sm btn-danger"
                                                            onclick="return confirm('Are you sure you want to cancel this booking?')">
                                                             <i class="fas fa-times"></i>

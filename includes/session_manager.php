@@ -1,104 +1,167 @@
 <?php
-// session_manager.php
-
-// Start or resume session
-session_start();
-
-/**
- * Set user session after successful login
- */
-function setUserSession($userData) {
-    $_SESSION['id'] = $userData['id'];
-    $_SESSION['username'] = $userData['username'];
-    $_SESSION['email'] = $userData['email'];
-    $_SESSION['role'] = $userData['role'];
-    $_SESSION['full_name'] = $userData['full_name'];
-    $_SESSION['last_activity'] = time();
-}
-
-/**
- * Check if user is logged in and session is valid
- */
-function isLoggedIn() {
-    // Check if user session exists
-    if (!isset($_SESSION['id']) || !isset($_SESSION['role'])) {
-        redirectToLogin();
-        return false;
+class SessionManager {
+    public function isLoggedIn() {
+        // Logic to check if the user is logged in
+        return isset($_SESSION['user']);
     }
 
-    // Check session timeout (30 minutes)
-    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
-        destroySession();
-        redirectToLogin("Session expired. Please login again.");
-        return false;
+    public function redirectToLogin($message) {
+        // Redirect to the login page with a message
+        header("Location: login.php?message=" . urlencode($message));
+        exit;
     }
 
-    // Update last activity time
-    $_SESSION['last_activity'] = time();
-    return true;
-}
-
-/**
- * Redirect to login page
- */
-function redirectToLogin($message = "") {
-    if ($message) {
-        $message = urlencode($message);
-        header("Location: ../Main/login.php?msg=" . $message);
-    } else {
-        header("Location: ../Main/login.php");
+    public function getCurrentUser() {
+        // Example logic to get current user
+        return $_SESSION['user'] ?? null;
     }
-    exit();
-}
 
-/**
- * Check user role and redirect if unauthorized
- */
-function checkUserRole($requiredRole) {
-    if (!isLoggedIn()) {
-        redirectToLogin();
-        return false;
+    public function setUserSession($user) {
+        // Set session data for the user
+        $_SESSION['user'] = $user;
+    }
+}
+class CustomSessionHandler {
+    private $db;
+    private $sessionTable = 'sessions';
+    
+    public function __construct($db) {
+        $this->db = $db;
+        $this->initSessionTable();
     }
     
-    if ($_SESSION['role'] !== $requiredRole) {
-        // Redirect based on role
-        if ($_SESSION['role'] === 'admin') {
-            header("Location: ../admin/admin_dashboard.php");
-        } else {
-            header("Location: ../client/client_dashboard.php");
+    private function initSessionTable() {
+        // Create sessions table if it doesn't exist
+        $query = "CREATE TABLE IF NOT EXISTS {$this->sessionTable} (
+            session_id VARCHAR(255) PRIMARY KEY,
+            user_id INT NOT NULL,
+            ip_address VARCHAR(45),
+            user_agent VARCHAR(255),
+            last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )";
+        
+        $this->db->query($query);
+    }
+    
+    public function startSession($userId) {
+        session_start();
+        $sessionId = session_id();
+        $ipAddress = $_SERVER['REMOTE_ADDR'];
+        $userAgent = $_SERVER['HTTP_USER_AGENT'];
+        
+        // Clear any existing sessions for this user
+        $this->clearUserSessions($userId);
+        
+        // Store new session
+        $query = "INSERT INTO {$this->sessionTable} 
+                 (session_id, user_id, ip_address, user_agent) 
+                 VALUES (?, ?, ?, ?)";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("siss", $sessionId, $userId, $ipAddress, $userAgent);
+        $stmt->execute();
+        
+        $_SESSION['user_id'] = $userId;
+        $_SESSION['last_activity'] = time();
+    }
+    
+    private function clearUserSessions($userId) {
+        $query = "DELETE FROM {$this->sessionTable} WHERE user_id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+    }
+    
+    public function validateSession() {
+        if (!isset($_SESSION['user_id'])) {
+            return false;
         }
-        exit();
-    }
-    return true;
-}
-
-/**
- * Destroy session and cleanup
- */
-function destroySession() {
-    $_SESSION = array();
-    
-    if (isset($_COOKIE[session_name()])) {
-        setcookie(session_name(), '', time()-3600, '/');
-    }
-    
-    session_destroy();
-}
-
-/**
- * Get current user data from session
- */
-function getCurrentUser() {
-    if (!isLoggedIn()) {
-        return null;
+        
+        $sessionId = session_id();
+        $userId = $_SESSION['user_id'];
+        
+        // Check if session exists and is valid
+        $query = "SELECT * FROM {$this->sessionTable} 
+                 WHERE session_id = ? AND user_id = ?";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("si", $sessionId, $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            $this->destroySession();
+            return false;
+        }
+        
+        // Update last activity
+        $_SESSION['last_activity'] = time();
+        return true;
     }
     
-    return [
-        'id' => $_SESSION['id'],
-        'username' => $_SESSION['username'],
-        'email' => $_SESSION['email'],
-        'role' => $_SESSION['role'],
-        'full_name' => $_SESSION['full_name']
-    ];
+    public function destroySession() {
+        $sessionId = session_id();
+        
+        // Remove from database
+        $query = "DELETE FROM {$this->sessionTable} WHERE session_id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("s", $sessionId);
+        $stmt->execute();
+        
+        // Clear PHP session
+        session_unset();
+        session_destroy();
+    }
+    
+    public function getUserData() {
+        if (!isset($_SESSION['user_id'])) {
+            return null;
+        }
+        
+        $userId = $_SESSION['user_id'];
+        $query = "SELECT id, username, email, full_name, role FROM users WHERE id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    }
 }
 
+// Example usage:
+class Auth {
+    private $db;
+    private $sessionHandler;
+    
+    public function __construct($db) {
+        $this->db = $db;
+        $this->sessionHandler = new CustomSessionHandler($db);
+    }
+    
+    public function login($email, $password) {
+        $query = "SELECT id, password FROM users WHERE email = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        
+        if ($result && password_verify($password, $result['password'])) {
+            $this->sessionHandler->startSession($result['id']);
+            return true;
+        }
+        return false;
+    }
+    
+    public function logout() {
+        $this->sessionHandler->destroySession();
+    }
+    
+    public function isLoggedIn() {
+        return $this->sessionHandler->validateSession();
+    }
+    
+    public function getCurrentUser() {
+        return $this->sessionHandler->getUserData();
+    }
+}

@@ -42,6 +42,11 @@ CREATE TABLE bookings (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
+ALTER TABLE bookings
+ADD COLUMN payment_id INT,
+ADD CONSTRAINT fk_payment_id FOREIGN KEY (payment_id) REFERENCES payments(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE;
 
 
 CREATE TABLE payments (
@@ -53,3 +58,5 @@ CREATE TABLE payments (
     payment_status ENUM('Pending', 'Completed', 'Failed') NOT NULL,
     notes TEXT
 );
+
+

@@ -16,7 +16,7 @@ if (isset($_GET['id'])) {
     $client_id = $_GET['id'];
 
     // Prepare the SQL query to fetch client details
-    $client_sql = "SELECT * FROM clients WHERE id = ?";
+    $client_sql = "SELECT * FROM users WHERE id = ?";
     $stmt = $conn->prepare($client_sql);
     $stmt->bind_param("i", $client_id); // Bind the client id to the prepared statement
     $stmt->execute(); // Execute the query
@@ -49,7 +49,7 @@ if (isset($_POST['update'])) {
     $phone = $_POST['phone'];
 
     // Prepare SQL query to update client data
-    $update_sql = "UPDATE clients SET username = ?, email = ?, full_name = ?, phone = ? WHERE id = ?";
+    $update_sql = "UPDATE users SET username = ?, email = ?, full_name = ?, phone = ? WHERE id = ?";
     $stmt = $conn->prepare($update_sql);
     $stmt->bind_param("ssssi", $username, $email, $full_name, $phone, $client_id);
 
