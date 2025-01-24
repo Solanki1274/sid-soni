@@ -94,7 +94,7 @@ $display_email = htmlspecialchars($user['email'] ?? '');
 $display_phone = htmlspecialchars($user['phone'] ?? 'Not provided');
 $display_role = ucfirst(htmlspecialchars($user['role'] ?? 'client'));
 
-// Rest of your HTML remains the same, just update the welcome section to use new variables:
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -228,36 +228,91 @@ $display_role = ucfirst(htmlspecialchars($user['role'] ?? 'client'));
                 </div>
             </div>
         </div>
+        <?php
+// First, fetch all services from the database
+$sql = "SELECT * FROM services ORDER BY name ASC";
+$stmt = $conn->prepare($sql);
+$stmt->execute();
+$result = $stmt->get_result();
+$services = $result->fetch_all(MYSQLI_ASSOC);
+?>
 
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Available Services</h5>
-                        <div class="row">
-                            <?php foreach ($services as $service): ?>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-title"><?php echo htmlspecialchars($service['name']); ?></h6>
-                                            <p class="card-text"><?php echo htmlspecialchars($service['description']); ?></p>
-                                            <p class="card-text">
-                                                <strong>Price:</strong> $<?php echo htmlspecialchars(number_format($service['price'], 2)); ?><br>
-                                                <strong>Duration:</strong> <?php echo htmlspecialchars($service['duration']); ?> minutes
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Available Services</h5>
+                <?php if (!empty($services)): ?>
+                    <div class="row">
+                        <?php foreach ($services as $service): ?>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 hover-shadow">
+                                    <div class="card-body d-flex flex-column">
+                                        <h6 class="card-title text-primary mb-3">
+                                            <?php echo htmlspecialchars($service['name']); ?>
+                                        </h6>
+                                        <p class="card-text flex-grow-1">
+                                            <?php echo htmlspecialchars($service['description']); ?>
+                                        </p>
+                                        <div class="service-details mt-3">
+                                            <p class="card-text mb-2">
+                                                <i class="fas fa-rupee-sign"></i>
+                                                <strong>Price:</strong> 
+                                                <span class="text-success">
+                                                    ₹<?php echo htmlspecialchars(number_format($service['price'], 2)); ?>
+                                                </span>
+                                            </p>
+                                            <p class="card-text mb-3">
+                                                <i class="fas fa-clock"></i>
+                                                <strong>Duration:</strong> 
+                                                <span class="text-muted">
+                                                    <?php echo htmlspecialchars($service['duration']); ?> minutes
+                                                </span>
                                             </p>
                                             <a href="book_service.php?service_id=<?php echo $service['id']; ?>" 
-                                               class="btn btn-primary btn-sm">
-                                                Book Now
+                                               class="btn btn-primary btn-sm w-100">
+                                                <i class="fas fa-calendar-plus"></i> Book Now
                                             </a>
                                         </div>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
-                        </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                </div>
+                <?php else: ?>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No services available at the moment.
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
+    </div>
+</div>
+
+<style>
+.hover-shadow {
+    transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.service-details {
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.fas {
+    margin-right: 0.5rem;
+}
+</style>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

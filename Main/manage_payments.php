@@ -171,6 +171,7 @@ $payments = $result->fetch_all(MYSQLI_ASSOC);
                                 <option value="Cash">Cash</option>
                                 <option value="Credit Card">Credit Card</option>
                                 <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="Bank Transfer">UPI</option>
                             </select>
                         </div>
                     </div>

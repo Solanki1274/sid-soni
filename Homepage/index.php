@@ -1,3 +1,16 @@
+<?php
+session_start();
+require_once '../db.php';
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Fetch services from the database
+$sql = "SELECT * FROM services";
+$result = $conn->query($sql);
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -30,29 +43,140 @@
                 <li><a href="#">Services</a></li>
                 <li><a href="#">Portfolio</a></li>
                 <li><a href="#">Contact</a></li>
-                <li class="cta-button"><a href="quote.php">Book</a></li>
+                <li class="cta-button"><a href="../Main/login.php">Book</a></li>
             </ul>
         </nav>
     </header>
 
     <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1 data-aos="fade-up">Building Ideas, Crafting Dreams</h1>
-            <p data-aos="fade-up" data-aos-delay="200">Your vision, our expertise - creating excellence together.</p>
-            <div class="hero-buttons" data-aos="fade-up" data-aos-delay="400">
-                <a href="services.php" class="btn btn-primary">Explore Services</a>
-                <a href="contact.php" class="btn btn-secondary">Contact Us</a>
+    <section class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="hero-carousel">
+            <div class="hero-slide active">
+                <h1>Welcome to Our Website</h1>
+                <p>Your success starts here. Discover endless possibilities.</p>
+                <button class="hero-btn">Learn More</button>
+            </div>
+            <div class="hero-slide">
+                <h1>Empower Your Journey</h1>
+                <p>Transform your ideas into reality with our expertise.</p>
+                <button class="hero-btn">Get Started</button>
+            </div>
+            <div class="hero-slide">
+                <h1>Innovate with Confidence</h1>
+                <p>Explore cutting-edge solutions tailored for you.</p>
+                <button class="hero-btn">Explore Now</button>
             </div>
         </div>
-        <div class="hero-overlay"></div>
-        <video autoplay muted loop class="hero-video">
-            <source src="videos/v1.mp4" type="video/mp4">
-        </video>
+        <div class="hero-dots">
+            <span class="dot active" data-index="0"></span>
+            <span class="dot" data-index="1"></span>
+            <span class="dot" data-index="2"></span>
+        </div>
     </section>
+
+
 
     <section class="services" id="services">
         <style>
+            .hero-section {
+                position: relative;
+                width: 100%;
+                height: 100vh;
+                background-image: url('photos/back.jpg');
+                /* Use your image */
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                overflow: hidden;
+            }
+
+            .hero-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1;
+            }
+
+            .hero-carousel {
+                position: relative;
+                z-index: 2;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                color: #fff;
+                text-align: center;
+            }
+
+            .hero-slide {
+                display: none;
+                /* Hide slides initially */
+                opacity: 0;
+                transition: opacity 0.5s ease-in-out;
+            }
+
+            .hero-slide.active {
+                display: block;
+                /* Show active slide */
+                opacity: 1;
+            }
+
+            .hero-slide h1 {
+                font-size: 4rem;
+                font-weight: bold;
+                margin-bottom: 1rem;
+            }
+
+            .hero-slide p {
+                font-size: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .hero-btn {
+                padding: 10px 20px;
+                font-size: 1rem;
+                color: #fff;
+                background-color: #007BFF;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+
+            .hero-btn:hover {
+                background-color: #0056b3;
+            }
+
+            .hero-dots {
+                position: absolute;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                gap: 10px;
+                z-index: 2;
+            }
+
+            .dot {
+                width: 12px;
+                height: 12px;
+                background-color: #fff;
+                border-radius: 50%;
+                cursor: pointer;
+                opacity: 0.5;
+                transition: opacity 0.3s ease;
+            }
+
+            .dot.active {
+                opacity: 1;
+            }
+
+
             .services {
                 padding: 80px 0;
                 background: #f8f9fa;
@@ -206,347 +330,350 @@
             .slider-dot.active {
                 background: #3498db;
             }
+
             .testimonials {
-            padding: 60px 0;
-            background-color: #f8f9fa;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .section-title {
-            font-size: 2.5rem;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .section-subtitle {
-            font-size: 1.1rem;
-            color: #666;
-        }
-
-        .testimonials-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            padding: 20px;
-        }
-
-        .testimonial-card {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .testimonial-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .testimonial-quote {
-            color: #007bff;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-
-        .testimonial-content {
-            font-size: 1.1rem;
-            color: #555;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
-        .testimonial-author {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .author-image {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            overflow: hidden;
-        }
-
-        .author-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .author-info {
-            flex-grow: 1;
-        }
-
-        .author-info h4 {
-            font-size: 1.1rem;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .author-info p {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .rating {
-            color: #ffc107;
-            margin-bottom: 10px;
-        }
-
-        .blog-btn {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .blog-btn:hover {
-            background: #0056b3;
-        }
-
-        @media (max-width: 768px) {
-            .testimonials-grid {
-                grid-template-columns: 1fr;
+                padding: 60px 0;
+                background-color: #f8f9fa;
             }
-        }
-        .portfolio {
-            padding: 60px 0;
-            background-color: #f8f9fa;
-        }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 20px;
+            }
 
-        .section-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+            .section-header {
+                text-align: center;
+                margin-bottom: 40px;
+            }
 
-        .section-title {
-            font-size: 2.5rem;
-            color: #333;
-            margin-bottom: 10px;
-        }
+            .section-title {
+                font-size: 2.5rem;
+                color: #333;
+                margin-bottom: 10px;
+            }
 
-        .section-subtitle {
-            font-size: 1.1rem;
-            color: #666;
-        }
+            .section-subtitle {
+                font-size: 1.1rem;
+                color: #666;
+            }
 
-        .portfolio-filters {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-        }
+            .testimonials-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 30px;
+                padding: 20px;
+            }
 
-        .filter-btn {
-            padding: 8px 20px;
-            border: 2px solid #007bff;
-            background: transparent;
-            color: #007bff;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1rem;
-        }
+            .testimonial-card {
+                background: white;
+                border-radius: 10px;
+                padding: 30px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease;
+            }
 
-        .filter-btn:hover,
-        .filter-btn.active {
-            background: #007bff;
-            color: white;
-        }
+            .testimonial-card:hover {
+                transform: translateY(-5px);
+            }
 
-        .portfolio-slider {
-            position: relative;
-            max-width: 1000px;
-            margin: 0 auto;
-            overflow: hidden;
-        }
+            .testimonial-quote {
+                color: #007bff;
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
 
-        .portfolio-container {
-            display: flex;
-            transition: transform 0.5s ease;
-        }
+            .testimonial-content {
+                font-size: 1.1rem;
+                color: #555;
+                line-height: 1.6;
+                margin-bottom: 20px;
+            }
 
-        .portfolio-item {
-            min-width: 100%;
-            padding: 20px;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
+            .testimonial-author {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
 
-        .portfolio-item.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
+            .author-image {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                overflow: hidden;
+            }
 
-        .portfolio-card {
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
+            .author-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
 
-        .portfolio-card:hover {
-            transform: translateY(-5px);
-        }
+            .author-info {
+                flex-grow: 1;
+            }
 
-        .portfolio-image {
-            position: relative;
-            height: 300px;
-            overflow: hidden;
-        }
+            .author-info h4 {
+                font-size: 1.1rem;
+                color: #333;
+                margin-bottom: 5px;
+            }
 
-        .portfolio-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+            .author-info p {
+                font-size: 0.9rem;
+                color: #666;
+                margin-bottom: 8px;
+            }
 
-        .portfolio-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 123, 255, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+            .rating {
+                color: #ffc107;
+                margin-bottom: 10px;
+            }
 
-        .portfolio-card:hover .portfolio-overlay {
-            opacity: 1;
-        }
+            .blog-btn {
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 8px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background 0.3s;
+            }
 
-        .portfolio-buttons {
-            display: flex;
-            gap: 15px;
-        }
+            .blog-btn:hover {
+                background: #0056b3;
+            }
 
-        .portfolio-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: white;
-            color: #007bff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
+            @media (max-width: 768px) {
+                .testimonials-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
 
-        .portfolio-btn:hover {
-            background: #007bff;
-            color: white;
-        }
+            .portfolio {
+                padding: 60px 0;
+                background-color: #f8f9fa;
+            }
 
-        .portfolio-content {
-            padding: 20px;
-        }
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 20px;
+            }
 
-        .portfolio-content h3 {
-            font-size: 1.3rem;
-            color: #333;
-            margin-bottom: 10px;
-        }
+            .section-header {
+                text-align: center;
+                margin-bottom: 40px;
+            }
 
-        .portfolio-content p {
-            color: #666;
-            margin-bottom: 15px;
-        }
+            .section-title {
+                font-size: 2.5rem;
+                color: #333;
+                margin-bottom: 10px;
+            }
 
-        .read-more {
-            color: #007bff;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
+            .section-subtitle {
+                font-size: 1.1rem;
+                color: #666;
+            }
 
-        .read-more:hover {
-            color: #0056b3;
-        }
+            .portfolio-filters {
+                display: flex;
+                justify-content: center;
+                gap: 15px;
+                margin-bottom: 40px;
+                flex-wrap: wrap;
+            }
 
-        .slider-buttons {
-            position: absolute;
-            top: 50%;
-            width: 100%;
-            transform: translateY(-50%);
-            display: flex;
-            justify-content: space-between;
-            padding: 0 10px;
-            pointer-events: none;
-        }
+            .filter-btn {
+                padding: 8px 20px;
+                border: 2px solid #007bff;
+                background: transparent;
+                color: #007bff;
+                border-radius: 25px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-size: 1rem;
+            }
 
-        .slider-btn {
-            background: rgba(0, 123, 255, 0.9);
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            pointer-events: auto;
-        }
+            .filter-btn:hover,
+            .filter-btn.active {
+                background: #007bff;
+                color: white;
+            }
 
-        .slider-btn:hover {
-            background: #007bff;
-            transform: scale(1.1);
-        }
+            .portfolio-slider {
+                position: relative;
+                max-width: 1000px;
+                margin: 0 auto;
+                overflow: hidden;
+            }
 
-        .slider-dots {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
+            .portfolio-container {
+                display: flex;
+                transition: transform 0.5s ease;
+            }
 
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #ccc;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+            .portfolio-item {
+                min-width: 100%;
+                padding: 20px;
+                opacity: 1;
+                transition: opacity 0.3s ease;
+            }
 
-        .dot:hover {
-            transform: scale(1.2);
-        }
+            .portfolio-item.hidden {
+                opacity: 0;
+                pointer-events: none;
+            }
 
-        .dot.active {
-            background: #007bff;
-        }
+            .portfolio-card {
+                background: white;
+                border-radius: 10px;
+                overflow: hidden;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease;
+            }
+
+            .portfolio-card:hover {
+                transform: translateY(-5px);
+            }
+
+            .portfolio-image {
+                position: relative;
+                height: 300px;
+                overflow: hidden;
+            }
+
+            .portfolio-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .portfolio-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 123, 255, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .portfolio-card:hover .portfolio-overlay {
+                opacity: 1;
+            }
+
+            .portfolio-buttons {
+                display: flex;
+                gap: 15px;
+            }
+
+            .portfolio-btn {
+                width: 45px;
+                height: 45px;
+                border-radius: 50%;
+                background: white;
+                color: #007bff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                transition: all 0.3s ease;
+            }
+
+            .portfolio-btn:hover {
+                background: #007bff;
+                color: white;
+            }
+
+            .portfolio-content {
+                padding: 20px;
+            }
+
+            .portfolio-content h3 {
+                font-size: 1.3rem;
+                color: #333;
+                margin-bottom: 10px;
+            }
+
+            .portfolio-content p {
+                color: #666;
+                margin-bottom: 15px;
+            }
+
+            .read-more {
+                color: #007bff;
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.3s ease;
+            }
+
+            .read-more:hover {
+                color: #0056b3;
+            }
+
+            .slider-buttons {
+                position: absolute;
+                top: 50%;
+                width: 100%;
+                transform: translateY(-50%);
+                display: flex;
+                justify-content: space-between;
+                padding: 0 10px;
+                pointer-events: none;
+            }
+
+            .slider-btn {
+                background: rgba(0, 123, 255, 0.9);
+                color: white;
+                border: none;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                pointer-events: auto;
+            }
+
+            .slider-btn:hover {
+                background: #007bff;
+                transform: scale(1.1);
+            }
+
+            .slider-dots {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin-top: 20px;
+            }
+
+            .dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: #ccc;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .dot:hover {
+                transform: scale(1.2);
+            }
+
+            .dot.active {
+                background: #007bff;
+            }
         </style>
 
+        <!-- services -->
         <div class="container">
             <div class="section-header" data-aos="fade-up">
                 <h2 class="section-title">Our Services</h2>
@@ -555,155 +682,38 @@
 
             <div class="services-slider">
                 <div class="services-grid">
-                    <!-- Web Development -->
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="#3498db">
-                                <path
-                                    d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8h16v10zm-2-1h-6v-2h6v2zm-8-6h8v2h-8zm-2 4h-2v-2h2zm0-4h-2v-2h2z" />
-                            </svg>
-                        </div>
-                        <div class="service-content">
-                            <h3>Web Development</h3>
-                            <p>Custom websites and web applications built with modern technologies.</p>
-                            <ul class="service-features">
-                                <li>Responsive Design</li>
-                                <li>E-commerce Solutions</li>
-                                <li>CMS Integration</li>
-                            </ul>
-                            <a href="services.php#web" class="service-link">Learn More <span>→</span></a>
-                        </div>
+                    <?php
+                    // Assuming $result is obtained from a valid database query
+                    if ($result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                            $features = json_decode($row['features'], true); // Decode JSON features
+                            echo '
+                <div class="service-card">
+                    <div class="service-icon">
+                        <img src="' . htmlspecialchars($row['image_url']) . '" alt="' . htmlspecialchars($row['name']) . ' Icon" width="40" height="40">
                     </div>
-                    <!-- Web Development -->
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="#3498db">
-                                <path
-                                    d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8h16v10z" />
-                                <path d="M8 13h3v3H8zm5-9h3v3h-3zM8 9h3v3H8z" />
-                            </svg>
-                        </div>
-                        <div class="service-content">
-                            <h3>Web Development</h3>
-                            <p>Custom websites and web applications built with modern technologies.</p>
-                            <ul class="service-features">
-                                <li>Responsive Design</li>
-                                <li>E-commerce Solutions</li>
-                                <li>CMS Integration</li>
-                            </ul>
-                            <a href="services.php#web" class="service-link">Learn More <span>→</span></a>
-                        </div>
+                    <div class="service-content">
+                        <h3>' . htmlspecialchars($row['name']) . '</h3>
+                        <p>' . htmlspecialchars($row['description']) . '</p>
+                        <ul class="service-features">';
+                            if (is_array($features)) {
+                                foreach ($features as $feature) {
+                                    echo '<li>' . htmlspecialchars($feature) . '</li>';
+                                }
+                            }
+                            echo '
+                        </ul>
+                        <a href="' . htmlspecialchars($row['link']) . '" class="service-link">Learn More <span>→</span></a>
                     </div>
-
-                    <!-- Digital Marketing -->
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="#3498db">
-                                <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z" />
-                                <path d="M16 6l2.29-2.29L20.59 6 22 4.59 19.41 2 16 5.41 18.59 8 20 6.59z" />
-                            </svg>
-                        </div>
-                        <div class="service-content">
-                            <h3>Digital Marketing</h3>
-                            <p>Strategic marketing solutions to grow your online presence.</p>
-                            <ul class="service-features">
-                                <li>SEO Optimization</li>
-                                <li>Social Media Marketing</li>
-                                <li>Content Strategy</li>
-                            </ul>
-                            <a href="services.php#marketing" class="service-link">Learn More <span>→</span></a>
-                        </div>
-                    </div>
-
-                    <!-- Video Editing -->
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="#3498db">
-                                <path
-                                    d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
-                            </svg>
-                        </div>
-                        <div class="service-content">
-                            <h3>Video Editing</h3>
-                            <p>Professional video editing and post-production services.</p>
-                            <ul class="service-features">
-                                <li>Motion Graphics</li>
-                                <li>Color Grading</li>
-                                <li>Sound Design</li>
-                            </ul>
-                            <a href="services.php#video" class="service-link">Learn More <span>→</span></a>
-                        </div>
-                    </div>
-
-                    <!-- Graphic Design -->
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="#3498db">
-                                <path
-                                    d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
-                            </svg>
-                        </div>
-                        <div class="service-content">
-                            <h3>Graphic Design</h3>
-                            <p>Creative design solutions for your brand identity.</p>
-                            <ul class="service-features">
-                                <li>Brand Identity</li>
-                                <li>Print Design</li>
-                                <li>UI/UX Design</li>
-                            </ul>
-                            <a href="services.php#design" class="service-link">Learn More <span>→</span></a>
-                        </div>
-                    </div>
-
-                    <!-- Content Creation -->
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="#3498db">
-                                <path
-                                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                            </svg>
-                        </div>
-                        <div class="service-content">
-                            <h3>Content Creation</h3>
-                            <p>Engaging content that tells your brand story.</p>
-                            <ul class="service-features">
-                                <li>Copywriting</li>
-                                <li>Blog Posts</li>
-                                <li>Social Media Content</li>
-                            </ul>
-                            <a href="services.php#content" class="service-link">Learn More <span>→</span></a>
-                        </div>
-                    </div>
-
-                    <!-- App Development -->
-                    <div class="service-card">
-                        <div class="service-icon">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="#3498db">
-                                <path
-                                    d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z" />
-                                <path d="M12 17c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1z" />
-                            </svg>
-                        </div>
-                        <div class="service-content">
-                            <h3>App Development</h3>
-                            <p>Native and cross-platform mobile applications.</p>
-                            <ul class="service-features">
-                                <li>iOS Development</li>
-                                <li>Android Development</li>
-                                <li>Flutter Apps</li>
-                            </ul>
-                            <a href="services.php#app" class="service-link">Learn More <span>→</span></a>
-                        </div>
-                    </div>
+                </div>';
+                        }
+                    } else {
+                        echo '<p>No services available at the moment.</p>';
+                    }
+                    ?>
                 </div>
             </div>
-            <!-- Similar cards for other services... -->
-        </div>
-        </div>
 
-        <div class="slider-controls">
-            <span class="slider-dot active"></span>
-            <span class="slider-dot"></span>
         </div>
         </div>
 
@@ -743,14 +753,15 @@
         </script>
     </section>
 
+
     <section class="portfolio" id="portfolio">
         <div class="container">
-            <div class="section-header" data-aos="fade-up">
+            <div class="section-header">
                 <h2 class="section-title">Our Work</h2>
                 <p class="section-subtitle">Showcasing our best projects</p>
             </div>
 
-            <div class="portfolio-filters" data-aos="fade-up">
+            <div class="portfolio-filters">
                 <button class="filter-btn active" data-filter="all">All</button>
                 <button class="filter-btn" data-filter="web">Web</button>
                 <button class="filter-btn" data-filter="marketing">Marketing</button>
@@ -760,86 +771,47 @@
 
             <div class="portfolio-slider">
                 <div class="portfolio-container">
-                    <!-- Will be populated by JavaScript -->
+                    <!-- Portfolio items will be added here -->
                 </div>
                 <div class="slider-buttons">
-                    <button class="slider-btn prev-btn">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <button class="slider-btn next-btn">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-                <div class="slider-dots">
-                    <!-- Will be populated by JavaScript -->
+                    <button class="slider-btn prev-btn">&lt;</button>
+                    <button class="slider-btn next-btn">&gt;</button>
                 </div>
             </div>
         </div>
     </section>
+
     <script>
+        // Portfolio items data
         const portfolioItems = [
-            {
-                title: "E-commerce Website",
-                description: "Full-stack development with modern technologies",
-                category: "web",
-                image: "/api/placeholder/800/600",
-                link: "#",
-                caseStudy: "blog.php?project=ecommerce"
-            },
-            {
-                title: "Digital Marketing Campaign",
-                description: "Comprehensive social media marketing strategy",
-                category: "marketing",
-                image: "/api/placeholder/800/600",
-                link: "#",
-                caseStudy: "blog.php?project=marketing"
-            },
-            {
-                title: "Product Video",
-                description: "Engaging promotional video content",
-                category: "video",
-                image: "/api/placeholder/800/600",
-                link: "#",
-                caseStudy: "blog.php?project=video"
-            },
-            {
-                title: "Brand Identity Design",
-                description: "Complete brand identity and guidelines",
-                category: "design",
-                image: "/api/placeholder/800/600",
-                link: "#",
-                caseStudy: "blog.php?project=design"
-            },
-            {
-                title: "Mobile App Development",
-                description: "Cross-platform mobile application",
-                category: "web",
-                image: "/api/placeholder/800/600",
-                link: "#",
-                caseStudy: "blog.php?project=mobile"
-            }
+            { title: "E-commerce Website", description: "Full-stack development", category: "web", image: "https://via.placeholder.com/300x200", link: "#", caseStudy: "#" },
+            { title: "Digital Marketing Campaign", description: "Social media strategy", category: "marketing", image: "https://via.placeholder.com/300x200", link: "#", caseStudy: "#" },
+            { title: "Product Video", description: "Promotional video", category: "video", image: "https://via.placeholder.com/300x200", link: "#", caseStudy: "#" },
+            { title: "Brand Identity Design", description: "Complete brand identity", category: "design", image: "https://via.placeholder.com/300x200", link: "#", caseStudy: "#" },
+            { title: "Mobile App Development", description: "Cross-platform app", category: "web", image: "https://via.placeholder.com/300x200", link: "#", caseStudy: "#" }
         ];
 
-        let currentSlide = 0;
-        let currentFilter = 'all';
         const container = document.querySelector('.portfolio-container');
-        const dotsContainer = document.querySelector('.slider-dots');
-        let autoSlideInterval;
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const prevBtn = document.querySelector('.prev-btn');
+        const nextBtn = document.querySelector('.next-btn');
+        let currentFilter = 'all';
+        let currentSlideIndex = 0;
 
-        // Create portfolio items
-        portfolioItems.forEach(item => {
-            const slide = document.createElement('div');
-            slide.className = `portfolio-item ${item.category}`;
-            slide.setAttribute('data-category', item.category);
-            slide.innerHTML = `
+        // Function to render portfolio items
+        function renderItems(filter) {
+            container.innerHTML = ''; // Clear previous items
+            const filteredItems = portfolioItems.filter(item => filter === 'all' || item.category === filter);
+
+            filteredItems.forEach((item, index) => {
+                const slide = document.createElement('div');
+                slide.className = `portfolio-item ${index === 0 ? 'active' : ''}`;
+                slide.innerHTML = `
                 <div class="portfolio-card">
                     <div class="portfolio-image">
                         <img src="${item.image}" alt="${item.title}">
                         <div class="portfolio-overlay">
-                            <div class="portfolio-buttons">
-                                <a href="${item.link}" class="portfolio-btn"><i class="fas fa-link"></i></a>
-                                <a href="#" class="portfolio-btn"><i class="fas fa-search"></i></a>
-                            </div>
+                            <a href="${item.link}" class="portfolio-btn">Visit</a>
                         </div>
                     </div>
                     <div class="portfolio-content">
@@ -849,92 +821,62 @@
                     </div>
                 </div>
             `;
-            container.appendChild(slide);
-        });
-
-        // Create dots
-        portfolioItems.forEach((_, index) => {
-            const dot = document.createElement('div');
-            dot.className = `dot ${index === 0 ? 'active' : ''}`;
-            dot.addEventListener('click', () => goToSlide(index));
-            dotsContainer.appendChild(dot);
-        });
-
-        function updateSlider() {
-            container.style.transform = `translateX(-${currentSlide * 100}%)`;
-            document.querySelectorAll('.dot').forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentSlide);
+                container.appendChild(slide);
             });
         }
 
-        function goToSlide(index) {
-            currentSlide = index;
-            updateSlider();
-            resetAutoSlide();
-        }
-
-        function nextSlide() {
-            const visibleItems = Array.from(document.querySelectorAll('.portfolio-item:not(.hidden)'));
-            if (visibleItems.length > 0) {
-                currentSlide = (currentSlide + 1) % visibleItems.length;
-                updateSlider();
-            }
-            resetAutoSlide();
-        }
-
-        function prevSlide() {
-            const visibleItems = Array.from(document.querySelectorAll('.portfolio-item:not(.hidden)'));
-            if (visibleItems.length > 0) {
-                currentSlide = (currentSlide - 1 + visibleItems.length) % visibleItems.length;
-                updateSlider();
-            }
-            resetAutoSlide();
-        }
-
-        function resetAutoSlide() {
-            clearInterval(autoSlideInterval);
-            startAutoSlide();
-        }
-
-        function startAutoSlide() {
-            autoSlideInterval = setInterval(nextSlide, 5000);
-        }
-
-        function filterItems(category) {
-            currentFilter = category;
-            currentSlide = 0;
-            document.querySelectorAll('.portfolio-item').forEach(item => {
-                const itemCategory = item.getAttribute('data-category');
-                if (category === 'all' || itemCategory === category) {
-                    item.classList.remove('hidden');
-                } else {
-                    item.classList.add('hidden');
-                }
+        // Function to handle filtering
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                currentFilter = button.getAttribute('data-filter');
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                currentSlideIndex = 0;
+                renderItems(currentFilter);
             });
-            updateSlider();
-
-            // Update filter buttons
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('data-filter') === category);
-            });
-        }
-
-        // Add event listeners
-        document.querySelector('.prev-btn').addEventListener('click', prevSlide);
-        document.querySelector('.next-btn').addEventListener('click', nextSlide);
-
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => filterItems(btn.getAttribute('data-filter')));
         });
 
-        // Pause auto-sliding when hovering over the slider
-        const slider = document.querySelector('.portfolio-slider');
-        slider.addEventListener('mouseenter', () => clearInterval(autoSlideInterval));
-        slider.addEventListener('mouseleave', startAutoSlide);
+        // Slider navigation
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.portfolio-item');
+            slides.forEach((slide, idx) => {
+                slide.style.display = idx === index ? 'block' : 'none';
+            });
+        }
 
-        // Start auto-sliding
-        startAutoSlide();
+        prevBtn.addEventListener('click', () => {
+            const slides = document.querySelectorAll('.portfolio-item');
+            currentSlideIndex = (currentSlideIndex - 1 + slides.length) % slides.length;
+            showSlide(currentSlideIndex);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            const slides = document.querySelectorAll('.portfolio-item');
+            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+            showSlide(currentSlideIndex);
+        });
+
+        // Initial render
+        renderItems(currentFilter);
+        showSlide(currentSlideIndex);
     </script>
+
+    <style>
+        .portfolio-item {
+            display: none;
+        }
+
+        .portfolio-item.active {
+            display: block;
+        }
+
+        .slider-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+    </style>
+
 
 
     <section class="testimonials">
@@ -951,7 +893,8 @@
                         <i class="fas fa-quote-left"></i>
                     </div>
                     <div class="testimonial-content">
-                        <p>"Working with Soni Builders was an excellent experience. Their team's expertise and dedication resulted in a website that exceeded our expectations."</p>
+                        <p>"Working with Soni Builders was an excellent experience. Their team's expertise and
+                            dedication resulted in a website that exceeded our expectations."</p>
                     </div>
                     <div class="testimonial-author">
                         <div class="author-image">
@@ -978,7 +921,8 @@
                         <i class="fas fa-quote-left"></i>
                     </div>
                     <div class="testimonial-content">
-                        <p>"The team delivered exceptional work on time and within budget. Highly recommend Soni Builders for their professionalism."</p>
+                        <p>"The team delivered exceptional work on time and within budget. Highly recommend Soni
+                            Builders for their professionalism."</p>
                     </div>
                     <div class="testimonial-author">
                         <div class="author-image">
@@ -1005,7 +949,8 @@
                         <i class="fas fa-quote-left"></i>
                     </div>
                     <div class="testimonial-content">
-                        <p>"I was impressed with the creativity and skill Soni Builders brought to our project. The results were outstanding!"</p>
+                        <p>"I was impressed with the creativity and skill Soni Builders brought to our project. The
+                            results were outstanding!"</p>
                     </div>
                     <div class="testimonial-author">
                         <div class="author-image">
@@ -1032,7 +977,8 @@
                         <i class="fas fa-quote-left"></i>
                     </div>
                     <div class="testimonial-content">
-                        <p>"Exceptional service! They truly care about their clients and deliver quality work every time."</p>
+                        <p>"Exceptional service! They truly care about their clients and deliver quality work every
+                            time."</p>
                     </div>
                     <div class="testimonial-author">
                         <div class="author-image">
@@ -1059,7 +1005,8 @@
                         <i class="fas fa-quote-left"></i>
                     </div>
                     <div class="testimonial-content">
-                        <p>"Soni Builders transformed our ideas into reality. The results have had a huge positive impact on our business."</p>
+                        <p>"Soni Builders transformed our ideas into reality. The results have had a huge positive
+                            impact on our business."</p>
                     </div>
                     <div class="testimonial-author">
                         <div class="author-image">
@@ -1083,7 +1030,7 @@
         </div>
     </section>
 
-   <script>
+    <script>
         const testimonials = [
             {
                 quote: "Working with Soni Builders was an excellent experience. Their team's expertise and dedication resulted in a website that exceeded our expectations.",
@@ -1229,7 +1176,8 @@
                 <!-- Company Info Section -->
                 <div class="footer-section company-info" data-aos="fade-right">
                     <h3>Soni Builders</h3>
-                    <p>Building dreams into reality since 2020. Your trusted partner in construction and development.
+                    <p>Building dreams into reality since 2020. Your trusted partner in construction and
+                        development.
                     </p>
                     <div class="company-stats">
                         <div class="stat-item">
@@ -1326,7 +1274,7 @@
                     <ul class="legal-links">
                         <li><a href="privacy.php">Privacy Policy</a></li>
                         <li><a href="terms.php">Terms of Service</a></li>
-                        <li><a href="sitemap.php">Sitemap</a></li>
+                        <li><a href="#">Sitemap</a></li>
                     </ul>
                 </div>
             </div>
@@ -1336,6 +1284,44 @@
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script src="script.js"></script>
+    <!-- carasole -->
+    <script>// Select elements
+        const slides = document.querySelectorAll('.hero-slide');
+        const dots = document.querySelectorAll('.dot');
+
+        let currentIndex = 0; // Current slide index
+        const slideInterval = 3000; // Interval in milliseconds
+
+        // Function to show a specific slide
+        function showSlide(index) {
+            // Hide all slides
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                dots[i].classList.remove('active');
+            });
+
+            // Show the current slide
+            slides[index].classList.add('active');
+            dots[index].classList.add('active');
+        }
+
+        // Function to go to the next slide
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % slides.length; // Loop back to the first slide
+            showSlide(currentIndex);
+        }
+
+        // Start the carousel
+        setInterval(nextSlide, slideInterval);
+
+        // Add event listeners for dot navigation
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                currentIndex = index; // Set the current index to the clicked dot
+                showSlide(currentIndex);
+            });
+        });
+    </script>
 </body>
 
 </html>

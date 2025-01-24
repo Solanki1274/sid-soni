@@ -1,40 +1,19 @@
-
 <?php
-session_start(); // Start the session
+session_start();
 
-// Include your database connection file
-include('../db.php'); 
+// Include database connection
+include('../db.php');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get the input from the form
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-
-    // Prepare SQL to select the admin by username
-    $stmt = $conn->prepare("SELECT * FROM admins WHERE username = ?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    // Check if a record was found
-    if ($result->num_rows > 0) {
-        $admin = $result->fetch_assoc();
-        
-        // Verify the password
-        if (password_verify($password, $admin['password'])) {
-            // Password is correct, start the session and store admin info
-            $_SESSION['admin_id'] = $admin['id'];
-            $_SESSION['admin_username'] = $admin['username'];
-            $_SESSION['admin_role'] = $admin['role'];
-            header("Location: admin_dashboard.php"); // Redirect to the dashboard
-            exit;
-        } else {
-            echo "Invalid username or password.";
-        }
-    } else {
-        echo "No admin found with that username.";
-    }
+// Authentication check
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
+    header("Location: login.php");
+    exit;
 }
+
+// Initialize error/success messages
+$error_message = '';
+$success_message = '';
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = isset($_POST['name']) ? trim($_POST['name']) : '';
@@ -42,42 +21,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = isset($_POST['price']) ? floatval($_POST['price']) : 0;
     $duration = isset($_POST['duration']) ? intval($_POST['duration']) : 0;
 
-    if (isset($_POST['add']) || isset($_POST['modify'])) {
-        $sql = isset($_POST['add'])
-            ? "INSERT INTO services (name, description, price, duration) VALUES (?, ?, ?, ?)"
-            : "UPDATE services SET name=?, description=?, price=?, duration=? WHERE id=?";
+    // Validate inputs
+    if (empty($name)) {
+        $error_message = "Service name is required.";
+    } elseif ($price < 0) {
+        $error_message = "Price cannot be negative.";
+    } elseif ($duration < 0) {
+        $error_message = "Duration cannot be negative.";
+    } else {
+        if (isset($_POST['add']) || isset($_POST['modify'])) {
+            $sql = isset($_POST['add'])
+                ? "INSERT INTO services (name, description, price, duration) VALUES (?, ?, ?, ?)"
+                : "UPDATE services SET name=?, description=?, price=?, duration=? WHERE id=?";
 
-        $stmt = $conn->prepare($sql);
+            $stmt = $conn->prepare($sql);
 
-        if (isset($_POST['add'])) {
-            $stmt->bind_param("ssdi", $name, $description, $price, $duration);
-        } else {
+            if ($stmt) {
+                if (isset($_POST['add'])) {
+                    $stmt->bind_param("ssdi", $name, $description, $price, $duration);
+                } else {
+                    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+                    $stmt->bind_param("ssdii", $name, $description, $price, $duration, $id);
+                }
+
+                if ($stmt->execute()) {
+                    $action = isset($_POST['add']) ? 'added' : 'modified';
+                    $success_message = "Service successfully $action!";
+                } else {
+                    $error_message = "Error: " . $stmt->error;
+                }
+                $stmt->close();
+            }
+        } elseif (isset($_POST['delete'])) {
             $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-            $stmt->bind_param("ssdii", $name, $description, $price, $duration, $id);
+            $sql = "DELETE FROM services WHERE id=?";
+            $stmt = $conn->prepare($sql);
+            
+            if ($stmt) {
+                $stmt->bind_param("i", $id);
+                if ($stmt->execute()) {
+                    $success_message = "Service successfully deleted!";
+                } else {
+                    $error_message = "Error deleting service: " . $stmt->error;
+                }
+                $stmt->close();
+            }
         }
-    } elseif (isset($_POST['delete'])) {
-        $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-        $sql = "DELETE FROM services WHERE id=?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $id);
-    }
-
-    if (isset($stmt)) {
-        if ($stmt->execute()) {
-            $action = isset($_POST['add']) ? 'added' : (isset($_POST['modify']) ? 'modified' : 'deleted');
-            $_SESSION['success_message'] = "Service successfully $action!";
-        } else {
-            $_SESSION['error_message'] = "Error: " . $stmt->error;
-        }
-        $stmt->close();
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit;
     }
 }
 
+// Fetch all services
 $sql = "SELECT * FROM services ORDER BY id ASC";
 $result = $conn->query($sql);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

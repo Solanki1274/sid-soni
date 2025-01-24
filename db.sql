@@ -22,8 +22,15 @@ CREATE TABLE services (
     description TEXT,
     price DECIMAL(10,2) NOT NULL,
     duration INT NOT NULL, -- Duration in minutes
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    category VARCHAR(50) DEFAULT 'General' AFTER name, -- Service category
+    status ENUM('active', 'inactive') DEFAULT 'active' AFTER duration, -- Service status
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at, -- Last updated time
+    discount DECIMAL(5,2) DEFAULT 0 AFTER price, -- Discount on service price
+    image_url VARCHAR(255) AFTER description -- Path or URL of the service image
 );
+
+
 
 -- Create bookings table
 CREATE TABLE bookings (

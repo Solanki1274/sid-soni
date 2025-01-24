@@ -1,9 +1,7 @@
 <?php
 session_start();
-require_once '../db.php'; // Database connection
-require_once '../print/phpqrcode/qrlib.php'; // Path to phpqrcode library (adjust path)
-
-
+require_once '../db.php';
+require_once '../print/phpqrcode/qrlib.php';
 
 $booking_id = $_GET['booking_id'] ?? null;
 $booking_details = null;
@@ -24,10 +22,8 @@ if ($booking_id) {
 // Function to process payment
 function processPayment($conn, $data) {
     try {
-        // Start transaction
         $conn->begin_transaction();
         
-        // Insert into payments table
         $stmt = $conn->prepare("INSERT INTO payments (customer_name, amount_paid, payment_method, payment_status, notes) 
                                VALUES (?, ?, ?, ?, ?)");
         
@@ -42,7 +38,6 @@ function processPayment($conn, $data) {
         $stmt->execute();
         $payment_id = $conn->insert_id;
         
-        // Update booking with the payment_id
         $stmt = $conn->prepare("UPDATE bookings SET status = 'confirmed', payment_id = ? WHERE id = ?");
         $stmt->bind_param("ii", $payment_id, $data['booking_id']);
         $stmt->execute();
@@ -78,12 +73,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Generate UPI QR Code
-$upi_data = "upi://pay?pa=solankiatulr2011@okaxis&pn=Harsh%20Solanki&aid=uGICAgMCCwdLJOQ" . $booking_details['price'] . "&cu=INR&aid=uGICAgMCCwdLJOQ";
-$qr_code_file = 'uploads/upi_qr_' . $booking_id . '.png';  // Save in the uploads folder
-upi://pay?pa=solankiatulr2011@okaxis&pn=Harsh%20Solanki&am=5000.00
-// Generate and save QR code image
-QRcode::png($upi_data, $qr_code_file);
+// Generate UPI QR Code with correct amount
+if ($booking_details && isset($booking_details['price'])) {
+    $amount = number_format($booking_details['price'], 2, '.', ''); // Format amount with 2 decimal places
+    $upi_data = "upi://pay?pa=solankiatulr2011@okaxis"
+              . "&pn=Harsh%20Solanki"
+              . "&am=" . $amount  // Add amount parameter
+              . "&cu=INR"
+              . "&aid=uGICAgMCCwdLJOQ";
+              
+    $qr_code_file = 'uploads/upi_qr_' . $booking_id . '.png';
+    QRcode::png($upi_data, $qr_code_file);
+}
 ?>
 
 <!DOCTYPE html>
