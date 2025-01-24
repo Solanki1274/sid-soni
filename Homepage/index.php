@@ -28,25 +28,28 @@ $result = $conn->query($sql);
 <body>
     <!-- Header -->
     <header class="header">
-        <nav class="navbar">
-            <div class="logo">
-                <a href="index.php">Soni Builders</a>
-            </div>
-            <div class="nav-toggle" id="navToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            <ul class="nav-links" id="navLinks">
-                <li><a href="#" class="active">Home</a></li>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Services</a></li>
-                <li><a href="#">Portfolio</a></li>
-                <li><a href="#">Contact</a></li>
-                <li class="cta-button"><a href="../Main/login.php">Book</a></li>
-            </ul>
-        </nav>
-    </header>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="index.php">
+                <img src="logo.png" alt="Soni Builders Logo">
+            </a>
+        </div>
+        <div class="nav-toggle" id="navToggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#" class="active">Home</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Services</a></li>
+            <li><a href="#">Portfolio</a></li>
+            <li><a href="#">Contact</a></li>
+            <li class="cta-button"><a href="../Main/login.php">Book</a></li>
+        </ul>
+    </nav>
+</header>
+
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -674,85 +677,101 @@ $result = $conn->query($sql);
         </style>
 
         <!-- services -->
-        <div class="container">
-            <div class="section-header" data-aos="fade-up">
-                <h2 class="section-title">Our Services</h2>
-                <p class="section-subtitle">Comprehensive solutions for your digital needs</p>
-            </div>
+<div class="container">
+    <div class="section-header" data-aos="fade-up">
+        <h2 class="section-title">Our Services</h2>
+        <p class="section-subtitle">Comprehensive solutions for your digital needs</p>
+    </div>
 
-            <div class="services-slider">
-                <div class="services-grid">
-                    <?php
-                    // Assuming $result is obtained from a valid database query
-                    if ($result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
-                            $features = json_decode($row['features'], true); // Decode JSON features
-                            echo '
-                <div class="service-card">
-                    <div class="service-icon">
-                        <img src="' . htmlspecialchars($row['image_url']) . '" alt="' . htmlspecialchars($row['name']) . ' Icon" width="40" height="40">
-                    </div>
-                    <div class="service-content">
-                        <h3>' . htmlspecialchars($row['name']) . '</h3>
-                        <p>' . htmlspecialchars($row['description']) . '</p>
-                        <ul class="service-features">';
-                            if (is_array($features)) {
-                                foreach ($features as $feature) {
-                                    echo '<li>' . htmlspecialchars($feature) . '</li>';
-                                }
-                            }
-                            echo '
-                        </ul>
-                        <a href="' . htmlspecialchars($row['link']) . '" class="service-link">Learn More <span>→</span></a>
-                    </div>
-                </div>';
+    <div class="services-slider">
+        <div class="services-grid">
+            <?php
+            // Ensure features key exists and is valid
+            if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    // Add null coalescing and default empty array for features
+                    $features = isset($row['features']) ? json_decode($row['features'], true) : [];
+                    
+                    // Sanitize and provide fallback values
+                    $serviceName = htmlspecialchars($row['name'] ?? 'Unnamed Service');
+                    $serviceDescription = htmlspecialchars($row['description'] ?? 'No description available');
+                    $serviceImageUrl = htmlspecialchars($row['image_url'] ?? 'path/to/default-icon.png');
+                    $serviceLink = htmlspecialchars($row['link'] ?? '#');
+                    
+                    echo '
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <img src="' . $serviceImageUrl . '" alt="' . $serviceName . ' Icon" width="40" height="40">
+                        </div>
+                        <div class="service-content">
+                            <h3>' . $serviceName . '</h3>
+                            <p>' . $serviceDescription . '</p>
+                            <ul class="service-features">';
+                    
+                    if (!empty($features)) {
+                        foreach ($features as $feature) {
+                            echo '<li>' . htmlspecialchars($feature) . '</li>';
                         }
                     } else {
-                        echo '<p>No services available at the moment.</p>';
+                        echo '<li>No specific features listed</li>';
                     }
-                    ?>
-                </div>
-            </div>
-
+                    
+                    echo '
+                            </ul>
+                            <a href="' . $serviceLink . '" class="service-link">Learn More <span>→</span></a>
+                        </div>
+                    </div>';
+                }
+            } else {
+                echo '<p>No services available at the moment.</p>';
+            }
+            ?>
         </div>
-        </div>
+    </div>
+</div>
 
-        <script>
-            // Slider functionality
-            const slider = document.querySelector('.services-grid');
-            const cards = document.querySelectorAll('.service-card');
-            const dots = document.querySelectorAll('.slider-dot');
-            let currentSlide = 0;
-            const cardsPerSlide = 3;
-            const totalSlides = Math.ceil(cards.length / cardsPerSlide);
+<script>
+    // Slider functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const slider = document.querySelector('.services-grid');
+        const cards = document.querySelectorAll('.service-card');
+        const dots = document.querySelectorAll('.slider-dot');
+        let currentSlide = 0;
+        const cardsPerSlide = 3;
+        const totalSlides = Math.ceil(cards.length / cardsPerSlide);
 
-            function updateSlider() {
-                const offset = -currentSlide * (100 / totalSlides);
-                slider.style.transform = `translateX(${offset}%)`;
+        function updateSlider() {
+            const offset = -currentSlide * (100 / totalSlides);
+            slider.style.transform = `translateX(${offset}%)`;
 
+            if (dots) {
                 dots.forEach((dot, index) => {
                     dot.classList.toggle('active', index === currentSlide);
                 });
             }
+        }
 
-            function nextSlide() {
-                currentSlide = (currentSlide + 1) % totalSlides;
-                updateSlider();
-            }
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            updateSlider();
+        }
 
-            // Auto-slide every 3 seconds
+        // Auto-slide every 3 seconds
+        if (cards.length > cardsPerSlide) {
             setInterval(nextSlide, 3000);
+        }
 
-            // Click handlers for dots
+        // Click handlers for dots
+        if (dots) {
             dots.forEach((dot, index) => {
                 dot.addEventListener('click', () => {
                     currentSlide = index;
                     updateSlider();
                 });
             });
-        </script>
-    </section>
-
+        }
+    });
+</script>
 
     <section class="portfolio" id="portfolio">
         <div class="container">
