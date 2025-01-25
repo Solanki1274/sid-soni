@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
     
-    // Prepare SQL statement (removed 'link' column)
+   
     $sql = "INSERT INTO services (name, description, features, image_url) 
             VALUES (?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE 
