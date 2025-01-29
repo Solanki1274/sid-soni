@@ -23,32 +23,100 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- AOS Animation -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
 </head>
 
 <body>
     <!-- Header -->
-    <header class="header">
-    <nav class="navbar">
-        <div class="logo">
-            <a href="index.php">
-                <img src="logo.png" alt="Soni Builders Logo">
-            </a>
-        </div>
-        <div class="nav-toggle" id="navToggle">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <ul class="nav-links" id="navLinks">
-            <li><a href="#" class="active">Home</a></li>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Services</a></li>
-            <li><a href="#">Portfolio</a></li>
-            <li><a href="#">Contact</a></li>
-            <li class="cta-button"><a href="../Main/login.php">Book</a></li>
-        </ul>
-    </nav>
+<!-- Top Bar -->
+
+
+<!-- Main Header -->
+<header class="header">
+    <div class="container">
+        <nav class="navbar">
+            <!-- Logo Section -->
+            <div class="logo-section">
+                <a href="index.php" class="main-logo">
+                    <img src="photo/logo.png" alt="SMS For You Logo">
+                </a>
+                <div class="partner-badges">
+                    <div class="partner-badge">
+                        <span>Google Partner</span>
+                        <a href="#" class="view-profile">View Profile</a>
+                    </div>
+                    <div class="partner-badge">
+                        <span>Meta Business Partner</span>
+                        <a href="#" class="view-profile">View Profile</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Menu -->
+            <div class="nav-menu">
+                <ul class="nav-links">
+                    <li>
+                        <a href="index.php" class="nav-item">
+                            <i class="fas fa-home"></i>
+                            <span>HOME</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="about.php" class="nav-item">
+                            <i class="fas fa-building"></i>
+                            <span>ABOUT</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="services.php" class="nav-item">
+                            <i class="fas fa-cog"></i>
+                            <span>SERVICES</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="blog.php" class="nav-item">
+                            <i class="fas fa-blog"></i>
+                            <span>BLOG</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="career.php" class="nav-item">
+                            <i class="fas fa-briefcase"></i>
+                            <span>CAREER</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="contact.php" class="nav-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>CONTACT</span>
+                        </a>
+                    </li>
+                </ul>
+
+
+            <!-- Mobile Menu Toggle -->
+            <div class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </div>
 </header>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const navToggle = document.getElementById('navToggle');
+    const navMenu = document.querySelector('.nav-menu');
+
+    navToggle.addEventListener('click', function() {
+        navMenu.classList.toggle('active');
+    });
+});
+</script>
 
 
     <!-- Hero Section -->
@@ -676,37 +744,33 @@ $result = $conn->query($sql);
             }
         </style>
 
-        <!-- services -->
 <div class="container">
     <div class="section-header" data-aos="fade-up">
         <h2 class="section-title">Our Services</h2>
         <p class="section-subtitle">Comprehensive solutions for your digital needs</p>
     </div>
 
+    <div class="services-slider-container">
     <div class="services-slider">
         <div class="services-grid">
             <?php
-            // Ensure features key exists and is valid
             if ($result->num_rows > 0) {
                 while ($row = $result->fetch_assoc()) {
-                    // Add null coalescing and default empty array for features
                     $features = isset($row['features']) ? json_decode($row['features'], true) : [];
                     
-                    // Sanitize and provide fallback values
                     $serviceName = htmlspecialchars($row['name'] ?? 'Unnamed Service');
                     $serviceDescription = htmlspecialchars($row['description'] ?? 'No description available');
-                    $serviceImageUrl = htmlspecialchars($row['image_url'] ?? 'path/to/default-icon.png');
+                    $serviceImageUrl = htmlspecialchars($row['image_url'] ?? 'photos/services/digital marketing.png');
                     $serviceLink = htmlspecialchars($row['link'] ?? '#');
                     
                     echo '
                     <div class="service-card">
-                        <div class="service-icon">
-                            <img src="' . $serviceImageUrl . '" alt="' . $serviceName . ' Icon" width="40" height="40">
-                        </div>
-                        <div class="service-content">
-                            <h3>' . $serviceName . '</h3>
-                            <p>' . $serviceDescription . '</p>
-                            <ul class="service-features">';
+                        <div class="service-image" style="background-image: url(\'' . $serviceImageUrl . '\')">
+                            <div class="service-overlay">
+                                <div class="service-content">
+                                    <h3>' . $serviceName . '</h3>
+                                    <p>' . $serviceDescription . '</p>
+                                    <ul class="service-features">';
                     
                     if (!empty($features)) {
                         foreach ($features as $feature) {
@@ -717,8 +781,10 @@ $result = $conn->query($sql);
                     }
                     
                     echo '
-                            </ul>
-                            <a href="' . $serviceLink . '" class="service-link">Learn More <span>→</span></a>
+                                    </ul>
+                                    <a href="' . $serviceLink . '" class="service-link">Learn More <span>→</span></a>
+                                </div>
+                            </div>
                         </div>
                     </div>';
                 }
@@ -728,49 +794,272 @@ $result = $conn->query($sql);
             ?>
         </div>
     </div>
+    <div class="slider-controls">
+        <button class="slider-arrow prev">←</button>
+        <div class="slider-dots"></div>
+        <button class="slider-arrow next">→</button>
+    </div>
 </div>
 
+<style>
+.services-slider-container {
+    position: relative;
+    overflow: hidden;
+    padding: 1rem 0;
+}
+
+.services-slider {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    transition: transform 0.5s ease;
+    width: 100%;
+}
+
+.service-card {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 400px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+}
+
+.service-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.service-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.8));
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 2rem;
+    color: white;
+}
+
+.service-content {
+    z-index: 1;
+}
+
+.service-content h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.service-content p {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.service-features {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.service-features li {
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.service-link {
+    display: inline-flex;
+    align-items: center;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.3s ease;
+}
+
+.service-link:hover {
+    opacity: 0.8;
+}
+
+.service-link span {
+    margin-left: 0.5rem;
+}
+
+.slider-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2rem;
+    gap: 1rem;
+}
+
+.slider-arrow {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.slider-arrow:hover {
+    background: #f5f5f5;
+}
+
+.slider-dots {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.slider-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ddd;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.slider-dot.active {
+    background: #333;
+}
+
+@media (max-width: 1024px) {
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
 <script>
-    // Slider functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const slider = document.querySelector('.services-grid');
-        const cards = document.querySelectorAll('.service-card');
-        const dots = document.querySelectorAll('.slider-dot');
-        let currentSlide = 0;
-        const cardsPerSlide = 3;
-        const totalSlides = Math.ceil(cards.length / cardsPerSlide);
+document.addEventListener('DOMContentLoaded', function() {
+    const slider = document.querySelector('.services-grid');
+    const cards = document.querySelectorAll('.service-card');
+    const dotsContainer = document.querySelector('.slider-dots');
+    const prevButton = document.querySelector('.slider-arrow.prev');
+    const nextButton = document.querySelector('.slider-arrow.next');
+    
+    let currentSlide = 0;
+    const cardsPerSlide = window.innerWidth > 1024 ? 3 : window.innerWidth > 768 ? 2 : 1;
+    const totalSlides = Math.ceil(cards.length / cardsPerSlide);
 
-        function updateSlider() {
-            const offset = -currentSlide * (100 / totalSlides);
-            slider.style.transform = `translateX(${offset}%)`;
+    // Create dots
+    for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('div');
+        dot.classList.add('slider-dot');
+        if (i === 0) dot.classList.add('active');
+        dotsContainer.appendChild(dot);
+    }
 
-            if (dots) {
-                dots.forEach((dot, index) => {
-                    dot.classList.toggle('active', index === currentSlide);
-                });
-            }
-        }
+    const dots = document.querySelectorAll('.slider-dot');
 
-        function nextSlide() {
-            currentSlide = (currentSlide + 1) % totalSlides;
+    function updateSlider() {
+        const offset = -currentSlide * (100 / totalSlides);
+        slider.style.transform = `translateX(${offset}%)`;
+        
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentSlide);
+        });
+
+        // Update arrow states
+        prevButton.style.opacity = currentSlide === 0 ? '0.5' : '1';
+        nextButton.style.opacity = currentSlide === totalSlides - 1 ? '0.5' : '1';
+    }
+
+    function nextSlide() {
+        if (currentSlide < totalSlides - 1) {
+            currentSlide++;
             updateSlider();
         }
+    }
 
-        // Auto-slide every 3 seconds
-        if (cards.length > cardsPerSlide) {
-            setInterval(nextSlide, 3000);
+    function prevSlide() {
+        if (currentSlide > 0) {
+            currentSlide--;
+            updateSlider();
         }
+    }
 
-        // Click handlers for dots
-        if (dots) {
-            dots.forEach((dot, index) => {
-                dot.addEventListener('click', () => {
-                    currentSlide = index;
-                    updateSlider();
-                });
-            });
+    // Event listeners
+    nextButton.addEventListener('click', nextSlide);
+    prevButton.addEventListener('click', prevSlide);
+
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            currentSlide = index;
+            updateSlider();
+        });
+    });
+
+    // Auto-slide
+    let autoSlideInterval;
+
+    function startAutoSlide() {
+        autoSlideInterval = setInterval(() => {
+            if (currentSlide === totalSlides - 1) {
+                currentSlide = 0;
+            } else {
+                currentSlide++;
+            }
+            updateSlider();
+        }, 5000); // Change slides every 5 seconds
+    }
+
+    function stopAutoSlide() {
+        clearInterval(autoSlideInterval);
+    }
+
+    // Start auto-slide
+    if (cards.length > cardsPerSlide) {
+        startAutoSlide();
+    }
+
+    // Pause auto-slide on hover
+    const sliderContainer = document.querySelector('.services-slider-container');
+    sliderContainer.addEventListener('mouseenter', stopAutoSlide);
+    sliderContainer.addEventListener('mouseleave', startAutoSlide);
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        const newCardsPerSlide = window.innerWidth > 1024 ? 3 : window.innerWidth > 768 ? 2 : 1;
+        if (newCardsPerSlide !== cardsPerSlide) {
+            location.reload(); // Refresh page to update grid layout
         }
     });
+
+    // Initial update
+    updateSlider();
+});
 </script>
 
     <section class="portfolio" id="portfolio">

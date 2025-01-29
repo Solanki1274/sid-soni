@@ -71,7 +71,7 @@ INSERT INTO users (username, email, password, full_name, phone, role, dob, addre
 ('tech_client2', 'client2@example.com', 'clientpass', 'Jane Smith', '9876500001', 'client', '1992-08-20', '456 Innovation Street', 'female', 'What was your childhood nickname?', 'janie');
 
 -- Insert sample data into the services table
-INSERT INTO services (name, description, price, duration, category, status, discount, image_url) VALUES
+INSERT INTO services (name, description, price, duration, category, status, image_url) VALUES
 ('Web Development', 'Professional web design and development services tailored to your business needs.', 800.00, 720, 'Tech', 'active', 10.00, 'images/webdev.jpg'),
 ('Digital Marketing', 'Comprehensive digital marketing services including SEO, PPC, and social media campaigns.', 600.00, 480, 'Tech', 'active', 8.00, 'images/digital_marketing.jpg'),
 ('Mobile App Development', 'Custom mobile app development for Android and iOS platforms.', 1200.00, 1440, 'Tech', 'active', 15.00, 'images/mobile_app.jpg'),
