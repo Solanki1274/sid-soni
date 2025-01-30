@@ -1,1635 +1,572 @@
 <?php
-session_start();
-require_once '../db.php';
+// config.php
+$db_host = 'localhost';
+$db_user = 'root';
+$db_pass = '';
+$db_name = 'sonibuild';
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+$conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
 }
 
-// Fetch services from the database
-$sql = "SELECT * FROM services";
-$result = $conn->query($sql);
+session_start();
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Soni Builders - Building Dreams</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Font Awesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- AOS Animation -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+    </style>
 </head>
+<body class="bg-white">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <a href="index.php" class="flex items-center space-x-2">
+                        <img class="h-10 w-10" src="photos/logo.png" alt="Logo">
+                        <span class="text-2xl font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">Soni Builders</span>
+                    </a>
+                </div>
 
-<body>
-    <!-- Header -->
-<!-- Top Bar -->
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8">
+                    <?php
+                    $menu_items = [
+                        'HOME' => ['url' => 'index.php', 'icon' => 'fa-home'],
+                        'ABOUT' => ['url' => 'about.php', 'icon' => 'fa-info-circle'],
+                        'SERVICES' => ['url' => 'services.php', 'icon' => 'fa-cogs'],
+                        'PORTFOLIO' => ['url' => 'portfolio.php', 'icon' => 'fa-briefcase'],
+                        'CONTACT' => ['url' => 'contact.php', 'icon' => 'fa-envelope']
+                    ];
 
+                    foreach ($menu_items as $name => $data) {
+                        $active = basename($_SERVER['PHP_SELF']) == $data['url'] ? 'text-red-600' : 'text-gray-800';
+                        echo "<a href='{$data['url']}' class='$active hover:text-red-600 transition-all duration-300 flex items-center gap-2'>
+                                <i class='fas {$data['icon']}'></i>
+                                <span>$name</span>
+                              </a>";
+                    }
+                    ?>
+                </div>
 
-<!-- Main Header -->
-<header class="header">
-    <div class="container">
-        <nav class="navbar">
-            <!-- Logo Section -->
-            <div class="logo-section">
-                <a href="index.php" class="main-logo">
-                    <img src="photo/logo.png" alt="SMS For You Logo">
-                </a>
-                <div class="partner-badges">
-                    <div class="partner-badge">
-                        <span>Google Partner</span>
-                        <a href="#" class="view-profile">View Profile</a>
-                    </div>
-                    <div class="partner-badge">
-                        <span>Meta Business Partner</span>
-                        <a href="#" class="view-profile">View Profile</a>
-                    </div>
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-gray-800 hover:text-red-600">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
                 </div>
             </div>
-
-            <!-- Navigation Menu -->
-            <div class="nav-menu">
-                <ul class="nav-links">
-                    <li>
-                        <a href="index.php" class="nav-item">
-                            <i class="fas fa-home"></i>
-                            <span>HOME</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="about.php" class="nav-item">
-                            <i class="fas fa-building"></i>
-                            <span>ABOUT</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="services.php" class="nav-item">
-                            <i class="fas fa-cog"></i>
-                            <span>SERVICES</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="blog.php" class="nav-item">
-                            <i class="fas fa-blog"></i>
-                            <span>BLOG</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="career.php" class="nav-item">
-                            <i class="fas fa-briefcase"></i>
-                            <span>CAREER</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="contact.php" class="nav-item">
-                            <i class="fas fa-envelope"></i>
-                            <span>CONTACT</span>
-                        </a>
-                    </li>
-                </ul>
-
-
-            <!-- Mobile Menu Toggle -->
-            <div class="nav-toggle" id="navToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </nav>
-    </div>
-</header>
-
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const navToggle = document.getElementById('navToggle');
-    const navMenu = document.querySelector('.nav-menu');
-
-    navToggle.addEventListener('click', function() {
-        navMenu.classList.toggle('active');
-    });
-});
-</script>
-
-
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="hero-overlay"></div>
-        <div class="hero-carousel">
-            <div class="hero-slide active">
-                <h1>Welcome to Our Website</h1>
-                <p>Your success starts here. Discover endless possibilities.</p>
-                <button class="hero-btn">Learn More</button>
-            </div>
-            <div class="hero-slide">
-                <h1>Empower Your Journey</h1>
-                <p>Transform your ideas into reality with our expertise.</p>
-                <button class="hero-btn">Get Started</button>
-            </div>
-            <div class="hero-slide">
-                <h1>Innovate with Confidence</h1>
-                <p>Explore cutting-edge solutions tailored for you.</p>
-                <button class="hero-btn">Explore Now</button>
-            </div>
         </div>
-        <div class="hero-dots">
-            <span class="dot active" data-index="0"></span>
-            <span class="dot" data-index="1"></span>
-            <span class="dot" data-index="2"></span>
-        </div>
-    </section>
-
-
-
-    <section class="services" id="services">
-        <style>
-            .hero-section {
-                position: relative;
-                width: 100%;
-                height: 100vh;
-                background-image: url('photos/back.jpg');
-                /* Use your image */
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-                overflow: hidden;
-            }
-
-            .hero-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 1;
-            }
-
-            .hero-carousel {
-                position: relative;
-                z-index: 2;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                height: 100%;
-                color: #fff;
-                text-align: center;
-            }
-
-            .hero-slide {
-                display: none;
-                /* Hide slides initially */
-                opacity: 0;
-                transition: opacity 0.5s ease-in-out;
-            }
-
-            .hero-slide.active {
-                display: block;
-                /* Show active slide */
-                opacity: 1;
-            }
-
-            .hero-slide h1 {
-                font-size: 4rem;
-                font-weight: bold;
-                margin-bottom: 1rem;
-            }
-
-            .hero-slide p {
-                font-size: 1.5rem;
-                margin-bottom: 2rem;
-            }
-
-            .hero-btn {
-                padding: 10px 20px;
-                font-size: 1rem;
-                color: #fff;
-                background-color: #007BFF;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                transition: background-color 0.3s ease;
-            }
-
-            .hero-btn:hover {
-                background-color: #0056b3;
-            }
-
-            .hero-dots {
-                position: absolute;
-                bottom: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                gap: 10px;
-                z-index: 2;
-            }
-
-            .dot {
-                width: 12px;
-                height: 12px;
-                background-color: #fff;
-                border-radius: 50%;
-                cursor: pointer;
-                opacity: 0.5;
-                transition: opacity 0.3s ease;
-            }
-
-            .dot.active {
-                opacity: 1;
-            }
-
-
-            .services {
-                padding: 80px 0;
-                background: #f8f9fa;
-            }
-
-            .container {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 0 15px;
-            }
-
-            .section-header {
-                text-align: center;
-                margin-bottom: 60px;
-            }
-
-            .section-title {
-                font-size: 2.5rem;
-                color: #2c3e50;
-                margin-bottom: 15px;
-            }
-
-            .section-subtitle {
-                font-size: 1.1rem;
-                color: #7f8c8d;
-            }
-
-            .services-slider {
-                position: relative;
-                overflow: hidden;
-            }
-
-            .services-grid {
-                display: flex;
-                transition: transform 0.5s ease;
-                gap: 30px;
-            }
-
-            .service-card {
-                flex: 0 0 calc(33.333% - 20px);
-                background: white;
-                border-radius: 15px;
-                padding: 30px;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-                transition: all 0.3s ease;
-                min-height: 400px;
-                display: flex;
-                flex-direction: column;
-            }
-
-            .service-card:hover {
-                transform: translateY(-10px);
-                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-            }
-
-            .service-icon {
-                width: 80px;
-                height: 80px;
-                margin: 0 auto 20px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                background: #f0f4f8;
-                transition: all 0.3s ease;
-            }
-
-            .service-card:hover .service-icon {
-                background: #3498db;
-            }
-
-            .service-card:hover .service-icon svg {
-                fill: white;
-            }
-
-            .service-content {
-                flex-grow: 1;
-                display: flex;
-                flex-direction: column;
-            }
-
-            .service-content h3 {
-                font-size: 1.5rem;
-                color: #2c3e50;
-                margin: 15px 0;
-                text-align: center;
-            }
-
-            .service-content p {
-                color: #7f8c8d;
-                margin-bottom: 20px;
-                text-align: center;
-                line-height: 1.6;
-            }
-
-            .service-features {
-                list-style: none;
-                padding: 0;
-                margin: 20px 0;
-            }
-
-            .service-features li {
-                color: #34495e;
-                margin: 10px 0;
-                padding-left: 25px;
-                position: relative;
-            }
-
-            .service-features li:before {
-                content: "✓";
-                color: #3498db;
-                position: absolute;
-                left: 0;
-            }
-
-            .service-link {
-                text-decoration: none;
-                color: #3498db;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-                margin-top: auto;
-                padding: 10px 20px;
-                border: 2px solid #3498db;
-                border-radius: 25px;
-                transition: all 0.3s ease;
-            }
-
-            .service-link:hover {
-                background: #3498db;
-                color: white;
-            }
-
-            .slider-controls {
-                display: flex;
-                justify-content: center;
-                gap: 10px;
-                margin-top: 30px;
-            }
-
-            .slider-dot {
-                width: 12px;
-                height: 12px;
-                border-radius: 50%;
-                background: #ddd;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-
-            .slider-dot.active {
-                background: #3498db;
-            }
-
-            .testimonials {
-                padding: 60px 0;
-                background-color: #f8f9fa;
-            }
-
-            .container {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 0 20px;
-            }
-
-            .section-header {
-                text-align: center;
-                margin-bottom: 40px;
-            }
-
-            .section-title {
-                font-size: 2.5rem;
-                color: #333;
-                margin-bottom: 10px;
-            }
-
-            .section-subtitle {
-                font-size: 1.1rem;
-                color: #666;
-            }
-
-            .testimonials-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: 30px;
-                padding: 20px;
-            }
-
-            .testimonial-card {
-                background: white;
-                border-radius: 10px;
-                padding: 30px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                transition: transform 0.3s ease;
-            }
-
-            .testimonial-card:hover {
-                transform: translateY(-5px);
-            }
-
-            .testimonial-quote {
-                color: #007bff;
-                font-size: 24px;
-                margin-bottom: 20px;
-            }
-
-            .testimonial-content {
-                font-size: 1.1rem;
-                color: #555;
-                line-height: 1.6;
-                margin-bottom: 20px;
-            }
-
-            .testimonial-author {
-                display: flex;
-                align-items: center;
-                gap: 15px;
-            }
-
-            .author-image {
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                overflow: hidden;
-            }
-
-            .author-image img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-
-            .author-info {
-                flex-grow: 1;
-            }
-
-            .author-info h4 {
-                font-size: 1.1rem;
-                color: #333;
-                margin-bottom: 5px;
-            }
-
-            .author-info p {
-                font-size: 0.9rem;
-                color: #666;
-                margin-bottom: 8px;
-            }
-
-            .rating {
-                color: #ffc107;
-                margin-bottom: 10px;
-            }
-
-            .blog-btn {
-                background: #007bff;
-                color: white;
-                border: none;
-                padding: 8px 20px;
-                border-radius: 5px;
-                cursor: pointer;
-                transition: background 0.3s;
-            }
-
-            .blog-btn:hover {
-                background: #0056b3;
-            }
-
-            @media (max-width: 768px) {
-                .testimonials-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            .portfolio {
-                padding: 60px 0;
-                background-color: #f8f9fa;
-            }
-
-            .container {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 0 20px;
-            }
-
-            .section-header {
-                text-align: center;
-                margin-bottom: 40px;
-            }
-
-            .section-title {
-                font-size: 2.5rem;
-                color: #333;
-                margin-bottom: 10px;
-            }
-
-            .section-subtitle {
-                font-size: 1.1rem;
-                color: #666;
-            }
-
-            .portfolio-filters {
-                display: flex;
-                justify-content: center;
-                gap: 15px;
-                margin-bottom: 40px;
-                flex-wrap: wrap;
-            }
-
-            .filter-btn {
-                padding: 8px 20px;
-                border: 2px solid #007bff;
-                background: transparent;
-                color: #007bff;
-                border-radius: 25px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                font-size: 1rem;
-            }
-
-            .filter-btn:hover,
-            .filter-btn.active {
-                background: #007bff;
-                color: white;
-            }
-
-            .portfolio-slider {
-                position: relative;
-                max-width: 1000px;
-                margin: 0 auto;
-                overflow: hidden;
-            }
-
-            .portfolio-container {
-                display: flex;
-                transition: transform 0.5s ease;
-            }
-
-            .portfolio-item {
-                min-width: 100%;
-                padding: 20px;
-                opacity: 1;
-                transition: opacity 0.3s ease;
-            }
-
-            .portfolio-item.hidden {
-                opacity: 0;
-                pointer-events: none;
-            }
-
-            .portfolio-card {
-                background: white;
-                border-radius: 10px;
-                overflow: hidden;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                transition: transform 0.3s ease;
-            }
-
-            .portfolio-card:hover {
-                transform: translateY(-5px);
-            }
-
-            .portfolio-image {
-                position: relative;
-                height: 300px;
-                overflow: hidden;
-            }
-
-            .portfolio-image img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-
-            .portfolio-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 123, 255, 0.8);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-
-            .portfolio-card:hover .portfolio-overlay {
-                opacity: 1;
-            }
-
-            .portfolio-buttons {
-                display: flex;
-                gap: 15px;
-            }
-
-            .portfolio-btn {
-                width: 45px;
-                height: 45px;
-                border-radius: 50%;
-                background: white;
-                color: #007bff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                text-decoration: none;
-                transition: all 0.3s ease;
-            }
-
-            .portfolio-btn:hover {
-                background: #007bff;
-                color: white;
-            }
-
-            .portfolio-content {
-                padding: 20px;
-            }
-
-            .portfolio-content h3 {
-                font-size: 1.3rem;
-                color: #333;
-                margin-bottom: 10px;
-            }
-
-            .portfolio-content p {
-                color: #666;
-                margin-bottom: 15px;
-            }
-
-            .read-more {
-                color: #007bff;
-                text-decoration: none;
-                font-weight: 500;
-                transition: color 0.3s ease;
-            }
-
-            .read-more:hover {
-                color: #0056b3;
-            }
-
-            .slider-buttons {
-                position: absolute;
-                top: 50%;
-                width: 100%;
-                transform: translateY(-50%);
-                display: flex;
-                justify-content: space-between;
-                padding: 0 10px;
-                pointer-events: none;
-            }
-
-            .slider-btn {
-                background: rgba(0, 123, 255, 0.9);
-                color: white;
-                border: none;
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.3s ease;
-                pointer-events: auto;
-            }
-
-            .slider-btn:hover {
-                background: #007bff;
-                transform: scale(1.1);
-            }
-
-            .slider-dots {
-                display: flex;
-                justify-content: center;
-                gap: 10px;
-                margin-top: 20px;
-            }
-
-            .dot {
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                background: #ccc;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-
-            .dot:hover {
-                transform: scale(1.2);
-            }
-
-            .dot.active {
-                background: #007bff;
-            }
-        </style>
-
-<div class="container">
-    <div class="section-header" data-aos="fade-up">
-        <h2 class="section-title">Our Services</h2>
-        <p class="section-subtitle">Comprehensive solutions for your digital needs</p>
-    </div>
-
-    <div class="services-slider-container">
-    <div class="services-slider">
-        <div class="services-grid">
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="hidden md:hidden fixed inset-0 z-50 bg-white">
+        <div class="flex flex-col items-center justify-center h-full space-y-8">
             <?php
-            if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    $features = isset($row['features']) ? json_decode($row['features'], true) : [];
-                    
-                    $serviceName = htmlspecialchars($row['name'] ?? 'Unnamed Service');
-                    $serviceDescription = htmlspecialchars($row['description'] ?? 'No description available');
-                    $serviceImageUrl = htmlspecialchars($row['image_url'] ?? 'photos/services/digital marketing.png');
-                    $serviceLink = htmlspecialchars($row['link'] ?? '#');
-                    
-                    echo '
-                    <div class="service-card">
-                        <div class="service-image" style="background-image: url(\'' . $serviceImageUrl . '\')">
-                            <div class="service-overlay">
-                                <div class="service-content">
-                                    <h3>' . $serviceName . '</h3>
-                                    <p>' . $serviceDescription . '</p>
-                                    <ul class="service-features">';
-                    
-                    if (!empty($features)) {
-                        foreach ($features as $feature) {
-                            echo '<li>' . htmlspecialchars($feature) . '</li>';
-                        }
-                    } else {
-                        echo '<li>No specific features listed</li>';
-                    }
-                    
-                    echo '
-                                    </ul>
-                                    <a href="' . $serviceLink . '" class="service-link">Learn More <span>→</span></a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>';
-                }
-            } else {
-                echo '<p>No services available at the moment.</p>';
+            foreach ($menu_items as $name => $data) {
+                echo "<a href='{$data['url']}' class='text-2xl text-gray-800 hover:text-red-600 flex items-center gap-2'>
+                        <i class='fas {$data['icon']}'></i>
+                        <span>$name</span>
+                      </a>";
             }
             ?>
         </div>
     </div>
-    <div class="slider-controls">
-        <button class="slider-arrow prev">←</button>
-        <div class="slider-dots"></div>
-        <button class="slider-arrow next">→</button>
-    </div>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center py-20 bg-cover bg-center" 
+             style="background-image: url('photos/bg.jpg');">
+        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="max-w-7xl mx-auto px-4 text-center relative z-10">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 text-white">
+                Transform Your Digital Presence
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-200 mb-8">
+                We build innovative solutions for forward-thinking businesses
+            </p>
+            <a href="../Main/login.php" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-8 rounded-lg transform hover:scale-105 transition-all duration-300">
+                Get Started
+            </a>
+        </div>
+
+        <!-- Floating SVGs -->
+        <img src="photos/pic-1.jpg" alt="Floating Image 1" 
+         class="animate-float absolute top-20 left-20 w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg" style="animation-delay: 0.2s">
+    <img src="photos/pic-2.jpg" alt="Floating Image 2" 
+         class="animate-float absolute bottom-10 right-20 w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg" style="animation-delay: 0.5s">
+    </section>
+
+    <!-- Services Section -->
+    <section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+        <h2 class="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
+            Our Services
+        </h2>
+        <p class="text-gray-600 text-center mb-12">Comprehensive solutions for your digital needs</p>
+
+        <!-- Slider Container -->
+        <div class="relative w-full overflow-hidden">
+            <div class="flex transition-transform duration-500 ease-in-out" id="serviceSlider">
+                <?php
+                $query = "SELECT * FROM services";
+                $result = mysqli_query($conn, $query);
+                
+                while($service = mysqli_fetch_assoc($result)) {
+                ?>
+                <!-- Service Card -->
+                <div class="min-w-full md:min-w-[33.33%] p-4">
+                    <div class="service-card bg-white p-6 rounded-xl shadow-lg border border-gray-100 
+                                transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+                        <img src="<?= $service['image_url'] ?>" alt="<?= $service['name'] ?>" 
+                             class="w-full h-48 object-cover mb-4 rounded-lg">
+                        <h3 class="text-xl font-bold mb-3 text-gray-800"><?= $service['name'] ?></h3>
+                        <p class="text-gray-600 mb-4"><?= $service['description'] ?></p>
+
+                        <!-- Features List -->
+                        <ul class="text-gray-500 text-sm mb-4">
+                            <?php
+                            $features = explode(',', $service['features']); // Assuming features are comma-separated
+                            foreach ($features as $feature) {
+                                echo "<li class='flex items-center space-x-2'><i class='fas fa-check text-green-500'></i> <span>$feature</span></li>";
+                            }
+                            ?>
+                        </ul>
+
+                        <!-- Price and Duration -->
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-red-600 font-bold">$<?= $service['price'] ?></span>
+                            <span class="text-gray-500"><?= $service['duration'] ?> mins</span>
+                        </div>
+
+                        <!-- Book Now Button -->
+                        <a href="../Main/login.php" class="block text-center bg-red-600 text-white py-2 px-4 rounded-md 
+                                hover:bg-red-700 transition">Book Now</a>
+                    </div>
+                </div>
+                <?php } ?>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="flex justify-center space-x-4 mt-6">
+    <button id="prevBtn" class="bg-gray-200 hover:bg-gray-300 p-3 rounded-full">
+        <i class="fas fa-chevron-left text-gray-700"></i>
+    </button>
+    <button id="nextBtn" class="bg-gray-200 hover:bg-gray-300 p-3 rounded-full">
+        <i class="fas fa-chevron-right text-gray-700"></i>
+    </button>
 </div>
 
-<style>
-.services-slider-container {
-    position: relative;
-    overflow: hidden;
-    padding: 1rem 0;
-}
-
-.services-slider {
-    overflow: hidden;
-    position: relative;
-    width: 100%;
-}
-
-.services-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    transition: transform 0.5s ease;
-    width: 100%;
-}
-
-.service-card {
-    position: relative;
-    border-radius: 10px;
-    overflow: hidden;
-    height: 400px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-.service-card:hover {
-    transform: translateY(-5px);
-}
-
-.service-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
-
-.service-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.8));
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 2rem;
-    color: white;
-}
-
-.service-content {
-    z-index: 1;
-}
-
-.service-content h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: white;
-}
-
-.service-content p {
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    line-height: 1.5;
-}
-
-.service-features {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 1rem;
-}
-
-.service-features li {
-    margin-bottom: 0.5rem;
-    font-size: 0.85rem;
-    opacity: 0.9;
-}
-
-.service-link {
-    display: inline-flex;
-    align-items: center;
-    color: white;
-    text-decoration: none;
-    font-weight: 500;
-    transition: opacity 0.3s ease;
-}
-
-.service-link:hover {
-    opacity: 0.8;
-}
-
-.service-link span {
-    margin-left: 0.5rem;
-}
-
-.slider-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 2rem;
-    gap: 1rem;
-}
-
-.slider-arrow {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.slider-arrow:hover {
-    background: #f5f5f5;
-}
-
-.slider-dots {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.slider-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #ddd;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.slider-dot.active {
-    background: #333;
-}
-
-@media (max-width: 1024px) {
-    .services-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .services-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
-
+</section>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const slider = document.querySelector('.services-grid');
-    const cards = document.querySelectorAll('.service-card');
-    const dotsContainer = document.querySelector('.slider-dots');
-    const prevButton = document.querySelector('.slider-arrow.prev');
-    const nextButton = document.querySelector('.slider-arrow.next');
-    
-    let currentSlide = 0;
-    const cardsPerSlide = window.innerWidth > 1024 ? 3 : window.innerWidth > 768 ? 2 : 1;
-    const totalSlides = Math.ceil(cards.length / cardsPerSlide);
+    // Slider Logic
+    const slider = document.getElementById('serviceSlider');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
 
-    // Create dots
-    for (let i = 0; i < totalSlides; i++) {
-        const dot = document.createElement('div');
-        dot.classList.add('slider-dot');
-        if (i === 0) dot.classList.add('active');
-        dotsContainer.appendChild(dot);
-    }
+    let index = 0;
+    let slides = slider.children; // Get all the slider items
+    const totalSlides = slides.length; // Number of available slides
+    if (totalSlides === 0) return; // If no slides, exit the script
 
-    const dots = document.querySelectorAll('.slider-dot');
-
-    function updateSlider() {
-        const offset = -currentSlide * (100 / totalSlides);
-        slider.style.transform = `translateX(${offset}%)`;
-        
-        dots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === currentSlide);
-        });
-
-        // Update arrow states
-        prevButton.style.opacity = currentSlide === 0 ? '0.5' : '1';
-        nextButton.style.opacity = currentSlide === totalSlides - 1 ? '0.5' : '1';
-    }
+    const slideWidth = slides[0].offsetWidth; // Get the width of one slide
+    let autoSlide = setInterval(nextSlide, 3000); // Auto slide every 3 sec
 
     function nextSlide() {
-        if (currentSlide < totalSlides - 1) {
-            currentSlide++;
-            updateSlider();
+        if (index < totalSlides - 1) {
+            index++;
+        } else {
+            index = 0;  // Loop back to the first slide
         }
+        updateSlider();
     }
 
     function prevSlide() {
-        if (currentSlide > 0) {
-            currentSlide--;
-            updateSlider();
+        if (index > 0) {
+            index--;
+        } else {
+            index = totalSlides - 1; // Loop to the last slide
         }
+        updateSlider();
     }
 
-    // Event listeners
-    nextButton.addEventListener('click', nextSlide);
-    prevButton.addEventListener('click', prevSlide);
-
-    dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
-            currentSlide = index;
-            updateSlider();
-        });
-    });
-
-    // Auto-slide
-    let autoSlideInterval;
-
-    function startAutoSlide() {
-        autoSlideInterval = setInterval(() => {
-            if (currentSlide === totalSlides - 1) {
-                currentSlide = 0;
-            } else {
-                currentSlide++;
-            }
-            updateSlider();
-        }, 5000); // Change slides every 5 seconds
-    }
-
-    function stopAutoSlide() {
-        clearInterval(autoSlideInterval);
-    }
-
-    // Start auto-slide
-    if (cards.length > cardsPerSlide) {
-        startAutoSlide();
+    function updateSlider() {
+        // Ensure that the slider's transform is updated with the correct index and width
+        slider.style.transition = "transform 0.5s ease"; // Smooth transition for sliding effect
+        slider.style.transform = `translateX(-${index * slideWidth}px)`;
     }
 
     // Pause auto-slide on hover
-    const sliderContainer = document.querySelector('.services-slider-container');
-    sliderContainer.addEventListener('mouseenter', stopAutoSlide);
-    sliderContainer.addEventListener('mouseleave', startAutoSlide);
+    slider.addEventListener("mouseenter", () => clearInterval(autoSlide));
+    slider.addEventListener("mouseleave", () => autoSlide = setInterval(nextSlide, 3000));
 
-    // Handle window resize
+    // Button controls (only enable if there are more than one slide)
+    if (totalSlides > 1) {
+        nextBtn.addEventListener("click", nextSlide);
+        prevBtn.addEventListener("click", prevSlide);
+    } else {
+        // Disable navigation buttons if there is only one slide
+        nextBtn.disabled = true;
+        prevBtn.disabled = true;
+    }
+    
+    // Ensure the slide width is updated when the window is resized
     window.addEventListener('resize', () => {
-        const newCardsPerSlide = window.innerWidth > 1024 ? 3 : window.innerWidth > 768 ? 2 : 1;
-        if (newCardsPerSlide !== cardsPerSlide) {
-            location.reload(); // Refresh page to update grid layout
+        const newSlideWidth = slides[0].offsetWidth;
+        if (newSlideWidth !== slideWidth) {
+            updateSlider(); // Recalculate position on resize
         }
     });
+</script>
+<!-- Our Work Area -->
+<div class="text-center py-16 bg-gray-100">
+    <h2 class="text-3xl font-semibold mb-8 text-gray-800">Our Work Area</h2>
 
-    // Initial update
-    updateSlider();
-});
+    <!-- Slider Container -->
+    <div class="relative w-full">
+        <div class="flex overflow-x-auto space-x-6 snap-x scroll-smooth" id="workSlider">
+
+            <!-- Social Media Card -->
+            <div class="relative w-80 h-72 bg-cover bg-center rounded-lg shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 cursor-pointer" style="background-image: url('path-to-social-media-background.jpg');">
+                <div class="absolute inset-0 bg-black opacity-50"></div> <!-- Overlay for readability -->
+                <div class="absolute bottom-4 left-4 text-white">
+                    <h3 class="text-2xl font-medium">Social Media</h3>
+                    <p class="text-sm mt-2">Boost your brand's presence across various social media platforms with effective strategies.</p>
+                </div>
+            </div>
+
+            <!-- Emerging Startups Card -->
+            <div class="relative w-80 h-72 bg-cover bg-center rounded-lg shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 cursor-pointer" style="background-image: url('path-to-startup-background.jpg');">
+                <div class="absolute inset-0 bg-black opacity-50"></div> <!-- Overlay for readability -->
+                <div class="absolute bottom-4 left-4 text-white">
+                    <h3 class="text-2xl font-medium">Emerging Startups</h3>
+                    <p class="text-sm mt-2">We help emerging startups grow by providing customized strategies and creative solutions.</p>
+                </div>
+            </div>
+
+            <!-- Large Enterprises Card -->
+            <div class="relative w-80 h-72 bg-cover bg-center rounded-lg shadow-lg hover:shadow-xl transition-transform transform hover:scale-105 cursor-pointer" style="background-image: url('path-to-enterprise-background.jpg');">
+                <div class="absolute inset-0 bg-black opacity-50"></div> <!-- Overlay for readability -->
+                <div class="absolute bottom-4 left-4 text-white">
+                    <h3 class="text-2xl font-medium">Large Enterprises</h3>
+                    <p class="text-sm mt-2">Transform your large enterprise with digital solutions that drive efficiency and growth.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Slider Buttons -->
+        <div class="absolute top-1/2 left-0 transform -translate-y-1/2 flex justify-between w-full px-4">
+            <button id="prevBtn" class="bg-gray-200 hover:bg-gray-300 p-3 rounded-full">
+                <i class="fas fa-chevron-left text-gray-700"></i>
+            </button>
+            <button id="nextBtn" class="bg-gray-200 hover:bg-gray-300 p-3 rounded-full">
+                <i class="fas fa-chevron-right text-gray-700"></i>
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+    const workSlider = document.getElementById('workSlider');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    let index = 0;
+    const slides = workSlider.children;
+    const totalSlides = slides.length;
+
+    function nextSlide() {
+        if (index < totalSlides - 1) {
+            index++;
+        } else {
+            index = 0;  // Loop back to the first slide
+        }
+        updateSlider();
+    }
+
+    function prevSlide() {
+        if (index > 0) {
+            index--;
+        } else {
+            index = totalSlides - 1;  // Loop to the last slide
+        }
+        updateSlider();
+    }
+
+    function updateSlider() {
+        workSlider.style.transform = `translateX(-${index * (slides[0].offsetWidth + 24)}px)`;  // Adjusts the slider position based on the width of each card and the gap
+    }
+
+    // Button Controls
+    nextBtn.addEventListener('click', nextSlide);
+    prevBtn.addEventListener('click', prevSlide);
 </script>
 
-    <section class="portfolio" id="portfolio">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Our Work</h2>
-                <p class="section-subtitle">Showcasing our best projects</p>
-            </div>
 
-            <div class="portfolio-filters">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="web">Web</button>
-                <button class="filter-btn" data-filter="marketing">Marketing</button>
-                <button class="filter-btn" data-filter="video">Video</button>
-                <button class="filter-btn" data-filter="design">Design</button>
-            </div>
 
-            <div class="portfolio-slider">
-                <div class="portfolio-container">
-                    <!-- Portfolio items will be added here -->
+<!-- Portfolio -->
+<section class="py-20 bg-gray-100">
+    <div class="max-w-7xl mx-auto px-4">
+        <h2 class="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+            Our Projects
+        </h2>
+        <p class="text-gray-600 text-center mb-12">Showcasing our best work and innovations</p>
+
+        <!-- Slider Container -->
+        <div class="relative w-full overflow-hidden">
+            <div class="flex transition-transform duration-500 ease-in-out" id="projectSlider">
+                <?php
+                $query = "SELECT * FROM projects"; // Assuming you have a 'projects' table
+                $result = mysqli_query($conn, $query);
+                
+                while($project = mysqli_fetch_assoc($result)) {
+                ?>
+                <!-- Project Card -->
+                <div class="min-w-full md:min-w-[33.33%] p-4">
+                    <div class="project-card bg-white p-6 rounded-xl shadow-lg border border-gray-100 
+                                transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+                        <img src="<?= $project['image_url'] ?>" alt="<?= $project['title'] ?>" 
+                             class="w-full h-48 object-cover mb-4 rounded-lg">
+                        <h3 class="text-xl font-bold mb-3 text-gray-800"><?= $project['title'] ?></h3>
+                        <p class="text-gray-600 mb-4"><?= $project['description'] ?></p>
+
+                        <!-- Features List -->
+                        <ul class="text-gray-500 text-sm mb-4">
+                            <?php
+                            $features = explode(',', $project['features']); // Assuming features are comma-separated
+                            foreach ($features as $feature) {
+                                echo "<li class='flex items-center space-x-2'><i class='fas fa-check text-green-500'></i> <span>$feature</span></li>";
+                            }
+                            ?>
+                        </ul>
+
+                        <!-- View More Button -->
+                        <a href="projects.php" class="block text-center bg-blue-600 text-white py-2 px-4 rounded-md 
+                                hover:bg-blue-700 transition">View More</a>
+                    </div>
                 </div>
-                <div class="slider-buttons">
-                    <button class="slider-btn prev-btn">&lt;</button>
-                    <button class="slider-btn next-btn">&gt;</button>
-                </div>
+                <?php } ?>
             </div>
         </div>
-    </section>
 
-    <script>
-        // Portfolio items data
-        const portfolioItems = [
-            { title: "E-commerce Website", description: "Full-stack development", category: "web", image: "https://via.placeholder.com/300x200", link: "#", caseStudy: "#" },
-            { title: "Digital Marketing Campaign", description: "Social media strategy", category: "marketing", image: "https://via.placeholder.com/300x200", link: "#", caseStudy: "#" },
-            { title: "Product Video", description: "Promotional video", category: "video", image: "https://via.placeholder.com/300x200", link: "#", caseStudy: "#" },
-            { title: "Brand Identity Design", description: "Complete brand identity", category: "design", image: "https://via.placeholder.com/300x200", link: "#", caseStudy: "#" },
-            { title: "Mobile App Development", description: "Cross-platform app", category: "web", image: "https://via.placeholder.com/300x200", link: "#", caseStudy: "#" }
-        ];
+        <!-- Navigation Buttons -->
+        <div class="flex justify-center space-x-4 mt-6">
+            <button id="prevProjectBtn" class="bg-gray-200 hover:bg-gray-300 p-3 rounded-full">
+                <i class="fas fa-chevron-left text-gray-700"></i>
+            </button>
+            <button id="nextProjectBtn" class="bg-gray-200 hover:bg-gray-300 p-3 rounded-full">
+                <i class="fas fa-chevron-right text-gray-700"></i>
+            </button>
+        </div>
+    </div>
+</section>
 
-        const container = document.querySelector('.portfolio-container');
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const prevBtn = document.querySelector('.prev-btn');
-        const nextBtn = document.querySelector('.next-btn');
-        let currentFilter = 'all';
-        let currentSlideIndex = 0;
+<script>
+    // Project Slider Logic
+    const projectSlider = document.getElementById('projectSlider');
+    const prevProjectBtn = document.getElementById('prevProjectBtn');
+    const nextProjectBtn = document.getElementById('nextProjectBtn');
 
-        // Function to render portfolio items
-        function renderItems(filter) {
-            container.innerHTML = ''; // Clear previous items
-            const filteredItems = portfolioItems.filter(item => filter === 'all' || item.category === filter);
+    let projectIndex = 0;
+    let projectCards = projectSlider.children; // Get all the project cards
+    const totalProjects = projectCards.length; // Number of available projects
+    if (totalProjects === 0) return; // If no projects, exit the script
 
-            filteredItems.forEach((item, index) => {
-                const slide = document.createElement('div');
-                slide.className = `portfolio-item ${index === 0 ? 'active' : ''}`;
-                slide.innerHTML = `
-                <div class="portfolio-card">
-                    <div class="portfolio-image">
-                        <img src="${item.image}" alt="${item.title}">
-                        <div class="portfolio-overlay">
-                            <a href="${item.link}" class="portfolio-btn">Visit</a>
-                        </div>
-                    </div>
-                    <div class="portfolio-content">
-                        <h3>${item.title}</h3>
-                        <p>${item.description}</p>
-                        <a href="${item.caseStudy}" class="read-more">Read Case Study</a>
-                    </div>
-                </div>
-            `;
-                container.appendChild(slide);
-            });
+    const projectSlideWidth = projectCards[0].offsetWidth;
+    let autoProjectSlide = setInterval(nextProjectSlide, 3000); // Auto slide every 3 sec
+
+    function nextProjectSlide() {
+        if (projectIndex < totalProjects - 1) {
+            projectIndex++;
+        } else {
+            projectIndex = 0;
         }
+        updateProjectSlider();
+    }
 
-        // Function to handle filtering
-        filterButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                currentFilter = button.getAttribute('data-filter');
-                filterButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                currentSlideIndex = 0;
-                renderItems(currentFilter);
-            });
-        });
-
-        // Slider navigation
-        function showSlide(index) {
-            const slides = document.querySelectorAll('.portfolio-item');
-            slides.forEach((slide, idx) => {
-                slide.style.display = idx === index ? 'block' : 'none';
-            });
+    function prevProjectSlide() {
+        if (projectIndex > 0) {
+            projectIndex--;
+        } else {
+            projectIndex = totalProjects - 1;
         }
+        updateProjectSlider();
+    }
 
-        prevBtn.addEventListener('click', () => {
-            const slides = document.querySelectorAll('.portfolio-item');
-            currentSlideIndex = (currentSlideIndex - 1 + slides.length) % slides.length;
-            showSlide(currentSlideIndex);
-        });
+    function updateProjectSlider() {
+        projectSlider.style.transform = `translateX(-${projectIndex * projectSlideWidth}px)`;
+    }
 
-        nextBtn.addEventListener('click', () => {
-            const slides = document.querySelectorAll('.portfolio-item');
-            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
-            showSlide(currentSlideIndex);
-        });
+    // Pause auto-slide on hover
+    projectSlider.addEventListener("mouseenter", () => clearInterval(autoProjectSlide));
+    projectSlider.addEventListener("mouseleave", () => autoProjectSlide = setInterval(nextProjectSlide, 3000));
 
-        // Initial render
-        renderItems(currentFilter);
-        showSlide(currentSlideIndex);
-    </script>
+    // Button controls (only enable if there are available projects)
+    if (totalProjects > 1) {
+        nextProjectBtn.addEventListener("click", nextProjectSlide);
+        prevProjectBtn.addEventListener("click", prevProjectSlide);
+    } else {
+        nextProjectBtn.disabled = true;
+        prevProjectBtn.disabled = true;
+    }
+</script>
 
+<!-- logos -->
+<script src="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.js"></script>
     <style>
-        .portfolio-item {
-            display: none;
-        }
-
-        .portfolio-item.active {
-            display: block;
-        }
-
-        .slider-buttons {
+        /* Align the full page */
+        .zig-zag-container {
             display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: nowrap;
+            width: 100%;
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 10px;
+            background-size: cover;
+            background-position: center;
+;
+            
+        }
+
+        /* Zig-Zag Movement */
+        .logo:nth-child(odd) {
+            transform: translateY(-20px);
+        }
+
+        .logo:nth-child(even) {
+            transform: translateY(20px);
+        }
+
+        /* Hover effect */
+        .logo:hover {
+            transform: scale(1.1) translateY(0); /* Slight zoom effect and remove the translateY offset */
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2); /* Add a shadow to the logo on hover */
         }
     </style>
 
 
 
-    <section class="testimonials">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Client Testimonials</h2>
-                <p class="section-subtitle">What our clients say about us</p>
+    <div class="zig-zag-container">
+        <h2 class="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Tech We use</h2>
+        <div class="logo bg-cover bg-center" style="background-image: url('https://smsforyou.biz/wp-content/uploads/2024/01/1.jpg');"></div>
+        <div class="logo bg-cover bg-center" style="background-image: url('https://smsforyou.biz/wp-content/uploads/2022/12/Group-4.jpg');"></div>
+        <div class="logo bg-cover bg-center" style="background-image: url('https://smsforyou.biz/wp-content/uploads/2024/01/2.jpg');"></div>
+        <div class="logo bg-cover bg-center" style="background-image: url('https://smsforyou.biz/wp-content/uploads/2024/01/3.jpg');"></div>
+        <div class="logo bg-cover bg-center" style="background-image: url('https://smsforyou.biz/wp-content/uploads/2022/12/Group-10.jpg');"></div>
+        <div class="logo bg-cover bg-center" style="background-image: url('https://smsforyou.biz/wp-content/uploads/2024/01/8.jpg');"></div>
+        <div class="logo bg-cover bg-center" style="background-image: url('https://smsforyou.biz/wp-content/uploads/2024/01/7.jpg');"></div>
+    </div>
+
+   
+    <footer class="relative text-white py-16">
+    <!-- Background Image -->
+    <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('photos/footer.png');"></div>
+
+    <!-- Overlay for better readability -->
+    <div class="absolute inset-0 bg-black bg-opacity-70"></div>
+
+    <!-- Content Wrapper -->
+    <div class="relative container mx-auto px-6 z-10">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            
+            <!-- Company Info -->
+            <div>
+                <!-- Logo -->
+                <div class="flex justify-center md:justify-start items-center space-x-3">
+                    <img src="photos/logo.png" alt="Soni Builders Logo" class="h-12">
+                    <h3 class="text-3xl font-bold text-white tracking-wide">Soni Builders</h3>
+                </div>
+                <p class="text-gray-300 mt-4">
+                    Transforming visions into reality with unmatched craftsmanship and integrity.
+                </p>
             </div>
 
-            <div class="testimonials-grid">
-                <!-- Testimonial 1 -->
-                <div class="testimonial-card">
-                    <div class="testimonial-quote">
-                        <i class="fas fa-quote-left"></i>
-                    </div>
-                    <div class="testimonial-content">
-                        <p>"Working with Soni Builders was an excellent experience. Their team's expertise and
-                            dedication resulted in a website that exceeded our expectations."</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-image">
-                            <img src="/api/placeholder/60/60" alt="John Smith">
-                        </div>
-                        <div class="author-info">
-                            <h4>John Smith</h4>
-                            <p>CEO, Tech Solutions</p>
-                            <div class="rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <button class="blog-btn">Read Blog</button>
-                        </div>
-                    </div>
-                </div>
+            <!-- Contact Info -->
+            <div>
+                <h3 class="text-2xl font-semibold mb-4 text-white">Contact Us</h3>
+                <ul class="space-y-3">
+                    <li class="flex items-center justify-center md:justify-start space-x-3">
+                        <i class="fas fa-map-marker-alt text-red-500"></i>
+                        <span class="text-gray-300">
+                            301, Vaibhav Tower, Anand - Vidyanagar Rd, Gujarat
+                        </span>
+                    </li>
+                    <li class="flex items-center justify-center md:justify-start space-x-3">
+                        <i class="fas fa-phone text-red-500"></i>
+                        <span class="text-gray-300">+91 94048 81016</span>
+                    </li>
+                    <li class="flex items-center justify-center md:justify-start space-x-3">
+                        <i class="fas fa-envelope text-red-500"></i>
+                        <span class="text-gray-300">info@sonibuilders.com</span>
+                    </li>
+                </ul>
+            </div>
 
-                <!-- Testimonial 2 -->
-                <div class="testimonial-card">
-                    <div class="testimonial-quote">
-                        <i class="fas fa-quote-left"></i>
-                    </div>
-                    <div class="testimonial-content">
-                        <p>"The team delivered exceptional work on time and within budget. Highly recommend Soni
-                            Builders for their professionalism."</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-image">
-                            <img src="/api/placeholder/60/60" alt="Emily Johnson">
-                        </div>
-                        <div class="author-info">
-                            <h4>Emily Johnson</h4>
-                            <p>Marketing Head, Bright Ideas</p>
-                            <div class="rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <button class="blog-btn">Read Blog</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Testimonial 3 -->
-                <div class="testimonial-card">
-                    <div class="testimonial-quote">
-                        <i class="fas fa-quote-left"></i>
-                    </div>
-                    <div class="testimonial-content">
-                        <p>"I was impressed with the creativity and skill Soni Builders brought to our project. The
-                            results were outstanding!"</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-image">
-                            <img src="/api/placeholder/60/60" alt="Michael Lee">
-                        </div>
-                        <div class="author-info">
-                            <h4>Michael Lee</h4>
-                            <p>Founder, Innovate Inc.</p>
-                            <div class="rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <button class="blog-btn">Read Blog</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Testimonial 4 -->
-                <div class="testimonial-card">
-                    <div class="testimonial-quote">
-                        <i class="fas fa-quote-left"></i>
-                    </div>
-                    <div class="testimonial-content">
-                        <p>"Exceptional service! They truly care about their clients and deliver quality work every
-                            time."</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-image">
-                            <img src="/api/placeholder/60/60" alt="Sarah Brown">
-                        </div>
-                        <div class="author-info">
-                            <h4>Sarah Brown</h4>
-                            <p>COO, Future Works</p>
-                            <div class="rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <button class="blog-btn">Read Blog</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Testimonial 5 -->
-                <div class="testimonial-card">
-                    <div class="testimonial-quote">
-                        <i class="fas fa-quote-left"></i>
-                    </div>
-                    <div class="testimonial-content">
-                        <p>"Soni Builders transformed our ideas into reality. The results have had a huge positive
-                            impact on our business."</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-image">
-                            <img src="/api/placeholder/60/60" alt="Chris White">
-                        </div>
-                        <div class="author-info">
-                            <h4>Chris White</h4>
-                            <p>Manager, Smart Enterprises</p>
-                            <div class="rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <button class="blog-btn">Read Blog</button>
-                        </div>
-                    </div>
-                </div>
+            <!-- Quick Links -->
+            <div>
+                <h3 class="text-2xl font-semibold mb-4 text-white">Quick Links</h3>
+                <ul class="space-y-3">
+                    <li><a href="#" class="text-gray-300 hover:text-red-400 transition">Home</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-red-400 transition">About Us</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-red-400 transition">Projects</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-red-400 transition">Contact</a></li>
+                </ul>
             </div>
         </div>
-    </section>
 
-    <script>
-        const testimonials = [
-            {
-                quote: "Working with Soni Builders was an excellent experience. Their team's expertise and dedication resulted in a website that exceeded our expectations.",
-                author: "John Smith",
-                position: "CEO, Tech Solutions",
-                image: "/api/placeholder/60/60"
-            },
-            {
-                quote: "The team delivered exceptional work on time and within budget. Highly recommend Soni Builders for their professionalism.",
-                author: "Emily Johnson",
-                position: "Marketing Head, Bright Ideas",
-                image: "/api/placeholder/60/60"
-            },
-            {
-                quote: "I was impressed with the creativity and skill Soni Builders brought to our project. The results were outstanding!",
-                author: "Michael Lee",
-                position: "Founder, Innovate Inc.",
-                image: "/api/placeholder/60/60"
-            },
-            {
-                quote: "Exceptional service! They truly care about their clients and deliver quality work every time.",
-                author: "Sarah Brown",
-                position: "COO, Future Works",
-                image: "/api/placeholder/60/60"
-            },
-            {
-                quote: "Soni Builders transformed our ideas into reality. The results have had a huge positive impact on our business.",
-                author: "Chris White",
-                position: "Manager, Smart Enterprises",
-                image: "/api/placeholder/60/60"
-            }
-        ];
-
-        let currentSlide = 0;
-        const container = document.querySelector('.testimonial-container');
-        const dotsContainer = document.querySelector('.slider-dots');
-        let autoSlideInterval;
-
-        // Create testimonial slides
-        testimonials.forEach((testimonial, index) => {
-            const slide = document.createElement('div');
-            slide.className = 'testimonial-item';
-            slide.innerHTML = `
-                <div class="testimonial-card">
-                    <div class="testimonial-quote">
-                        <i class="fas fa-quote-left"></i>
-                    </div>
-                    <div class="testimonial-content">
-                        <p>${testimonial.quote}</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-image">
-                            <img src="${testimonial.image}" alt="${testimonial.author}">
-                        </div>
-                        <div class="author-info">
-                            <h4>${testimonial.author}</h4>
-                            <p>${testimonial.position}</p>
-                            <div class="rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <button class="blog-btn">Read Blog</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.appendChild(slide);
-        });
-
-        // Create dots
-        testimonials.forEach((_, index) => {
-            const dot = document.createElement('div');
-            dot.className = `dot ${index === 0 ? 'active' : ''}`;
-            dot.addEventListener('click', () => goToSlide(index));
-            dotsContainer.appendChild(dot);
-        });
-
-        function updateSlider() {
-            container.style.transform = `translateX(-${currentSlide * 100}%)`;
-            // Update dots
-            document.querySelectorAll('.dot').forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentSlide);
-            });
-        }
-
-        function goToSlide(index) {
-            currentSlide = index;
-            updateSlider();
-            resetAutoSlide();
-        }
-
-        function nextSlide() {
-            currentSlide = (currentSlide + 1) % testimonials.length;
-            updateSlider();
-            resetAutoSlide();
-        }
-
-        function prevSlide() {
-            currentSlide = (currentSlide - 1 + testimonials.length) % testimonials.length;
-            updateSlider();
-            resetAutoSlide();
-        }
-
-        function resetAutoSlide() {
-            clearInterval(autoSlideInterval);
-            startAutoSlide();
-        }
-
-        function startAutoSlide() {
-            autoSlideInterval = setInterval(nextSlide, 5000);
-        }
-
-        // Add button event listeners
-        document.querySelector('.prev-btn').addEventListener('click', prevSlide);
-        document.querySelector('.next-btn').addEventListener('click', nextSlide);
-
-        // Start auto-sliding
-        startAutoSlide();
-
-        // Pause auto-sliding when hovering over the slider
-        const slider = document.querySelector('.testimonial-slider');
-        slider.addEventListener('mouseenter', () => clearInterval(autoSlideInterval));
-        slider.addEventListener('mouseleave', startAutoSlide);
-    </script>
-
-    <!-- Newsletter Section -->
-
-    <!-- Enhanced Footer Section -->
-    <footer class="footer">
-        <div class="footer-wave">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
-                <path fill="#DC2626" fill-opacity="1"
-                    d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,128C672,128,768,160,864,176C960,192,1056,192,1152,176C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z">
-                </path>
-            </svg>
+        <!-- Social Media Icons -->
+        <div class="flex justify-center space-x-6 mt-8">
+            <a href="#" class="text-gray-300 hover:text-red-400 transition">
+                <i class="fab fa-facebook-f text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-300 hover:text-red-400 transition">
+                <i class="fab fa-twitter text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-300 hover:text-red-400 transition">
+                <i class="fab fa-instagram text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-300 hover:text-red-400 transition">
+                <i class="fab fa-linkedin-in text-xl"></i>
+            </a>
         </div>
 
-        <div class="container">
-            <div class="footer-content">
-                <!-- Company Info Section -->
-                <div class="footer-section company-info" data-aos="fade-right">
-                    <h3>Soni Builders</h3>
-                    <p>Building dreams into reality since 2020. Your trusted partner in construction and
-                        development.
-                    </p>
-                    <div class="company-stats">
-                        <div class="stat-item">
-                            <span class="stat-number" data-count="500">0</span>
-                            <span class="stat-label">Projects</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number" data-count="100">0</span>
-                            <span class="stat-label">Clients</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number" data-count="50">0</span>
-                            <span class="stat-label">Awards</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Links Section -->
-                <div class="footer-section quick-links" data-aos="fade-up">
-                    <h3>Quick Links</h3>
-                    <div class="links-grid">
-                        <div class="links-column">
-                            <h4>Services</h4>
-                            <ul>
-                                <li><a href="services.php#residential">Residential</a></li>
-                                <li><a href="services.php#commercial">Commercial</a></li>
-                                <li><a href="services.php#renovation">Renovation</a></li>
-                                <li><a href="services.php#interior">Interior Design</a></li>
-                            </ul>
-                        </div>
-                        <div class="links-column">
-                            <h4>Company</h4>
-                            <ul>
-                                <li><a href="about.php">About Us</a></li>
-                                <li><a href="team.php">Our Team</a></li>
-                                <li><a href="careers.php">Careers</a></li>
-                                <li><a href="blog.php">Blog</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Contact Section -->
-                <div class="footer-section contact-info" data-aos="fade-left">
-                    <h3>Get in Touch</h3>
-                    <div class="contact-details">
-                        <div class="contact-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <div>
-                                <h4>Visit Us</h4>
-                                <p>123 Construction Ave<br>Builder's District, City 12345</p>
-                            </div>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fas fa-phone"></i>
-                            <div>
-                                <h4>Call Us</h4>
-                                <p>+1 (234) 567-8900<br>+1 (234) 567-8901</p>
-                            </div>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <div>
-                                <h4>Email Us</h4>
-                                <p>info@sonibuilders.com<br>support@sonibuilders.com</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="social-links">
-                        <a href="#" class="social-link facebook"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-link twitter"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-link instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-link linkedin"><i class="fab fa-linkedin-in"></i></a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Newsletter Section -->
-            <div class="footer-newsletter" data-aos="fade-up">
-                <h3>Subscribe to Our Newsletter</h3>
-                <p>Stay updated with our latest projects and news</p>
-                <form class="newsletter-form" id="newsletterForm">
-                    <div class="form-group">
-                        <input type="email" placeholder="Enter your email" required>
-                        <button type="submit">Subscribe</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Footer Bottom -->
-            <div class="footer-bottom">
-                <div class="footer-legal">
-                    <p>&copy; 2025 Soni Builders. All rights reserved.</p>
-                    <ul class="legal-links">
-                        <li><a href="privacy.php">Privacy Policy</a></li>
-                        <li><a href="terms.php">Terms of Service</a></li>
-                        <li><a href="#">Sitemap</a></li>
-                    </ul>
-                </div>
-            </div>
+        <!-- Copyright -->
+        <div class="border-t border-gray-600 mt-8 pt-6 text-center text-gray-400">
+            <p>&copy; <?php echo date('Y'); ?> Soni Builders. All rights reserved.</p>
         </div>
-    </footer>
+    </div>
+</footer>
+
 
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <script src="script.js"></script>
-    <!-- carasole -->
-    <script>// Select elements
-        const slides = document.querySelectorAll('.hero-slide');
-        const dots = document.querySelectorAll('.dot');
-
-        let currentIndex = 0; // Current slide index
-        const slideInterval = 3000; // Interval in milliseconds
-
-        // Function to show a specific slide
-        function showSlide(index) {
-            // Hide all slides
-            slides.forEach((slide, i) => {
-                slide.classList.remove('active');
-                dots[i].classList.remove('active');
-            });
-
-            // Show the current slide
-            slides[index].classList.add('active');
-            dots[index].classList.add('active');
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
         }
-
-        // Function to go to the next slide
-        function nextSlide() {
-            currentIndex = (currentIndex + 1) % slides.length; // Loop back to the first slide
-            showSlide(currentIndex);
-        }
-
-        // Start the carousel
-        setInterval(nextSlide, slideInterval);
-
-        // Add event listeners for dot navigation
-        dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => {
-                currentIndex = index; // Set the current index to the clicked dot
-                showSlide(currentIndex);
-            });
-        });
     </script>
 </body>
-
 </html>

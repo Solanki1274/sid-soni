@@ -31,6 +31,24 @@ CREATE TABLE services (
     image_url VARCHAR(255) -- Path or URL of the service image
 );
 
+CREATE TABLE projects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    image_url VARCHAR(255) NOT NULL,
+    features TEXT NOT NULL,
+    client_name VARCHAR(255),
+    client_testimonial TEXT,
+    project_url VARCHAR(255),
+    completion_date DATE
+);
+
+INSERT INTO projects (title, description, image_url, features, client_name, client_testimonial, project_url, completion_date)
+VALUES 
+    ('Custom CRM Development', 'A custom CRM developed for managing client relationships and data.', 'images/crm-project.jpg', 'CRM Integration, Cloud Storage, Real-time Analytics', 'Tech Solutions Ltd.', 'The CRM solution transformed our workflow!', 'https://www.techagency.com/project/crm', '2024-01-15'),
+    ('AI-Powered Chatbot', 'An AI-powered chatbot to automate customer support and increase engagement.', 'images/chatbot-project.jpg', 'AI, Natural Language Processing, Integration', 'SmartAI Technologies', 'AI Chatbot has revolutionized customer service.', 'https://www.techagency.com/project/chatbot', '2023-12-30'),
+    ('E-Commerce Website', 'An e-commerce platform built to manage online stores and transactions.', 'images/e-commerce-project.jpg', 'User-friendly Interface, Secure Payments, Multi-currency Support', 'E-Shop Enterprises', 'The e-commerce platform has boosted our sales by 40%.', 'https://www.techagency.com/project/e-commerce', '2023-11-25');
+
 
 -- Create payments table
 CREATE TABLE payments (
